@@ -23,22 +23,18 @@
     (s/conform (:args (s/get-spec var)) args)))
 
 (defn trace [{:keys [path] :as problem}]
-  (let [spec (s/get-spec (first (:via problem)))]
-    (loop [path path, spec spec, form (s/form spec), ret []]
+  (let [form (s/form (s/get-spec (first (:via problem))))]
+    (loop [path path, form form, ret []]
       ;(prn :path path)
-      ;(prn :spec spec)
       ;(prn :form form)
       (if (empty? path)
         ret
-        (let [[spec' path'] (step (first form)
+        (let [[form' path'] (step (first form)
                                   (conform-macro-form form)
-                                  path)
-              [spec' form'] (if (keyword? spec')
-                              (let [spec (s/get-spec spec')]
-                                [spec (s/form spec)])
-                              [spec spec'])]
-          (recur path' spec' form'
-                 (conj ret {:spec spec :form form})))))))
+                                  path)]
+          (recur path'
+                 (if (keyword? form') (s/form (s/get-spec form')) form')
+                 (conj ret {:form form})))))))
 
 (defn traces [ed]
   (mapv trace (::s/problems ed)))
