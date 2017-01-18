@@ -19,17 +19,19 @@
 (defmethod step `s/* [{:keys [args]} path]
   [(:pred-form args) path])
 
-(defn trace [{:keys [path] :as problem}]
-  (let [form (s/form (s/get-spec (first (:via problem))))]
-    (loop [path path, form form, ret []]
-      ;(prn :path path)
-      ;(prn :form form)
-      (if (empty? path)
-        ret
-        (let [[form' path'] (step (s/conform ::specs/spec form) path)]
-          (recur path'
-                 (if (keyword? form') (s/form (s/get-spec form')) form')
-                 (conj ret {:form form})))))))
+(defn trace [{:keys [path] :as problem} spec value]
+  (loop [path path, form (s/form spec), ret []]
+    ;(prn :path path)
+    ;(prn :form form)
+    (if (empty? path)
+      ret
+      (let [[form' path'] (step (s/conform ::specs/spec form) path)]
+        (recur path'
+               (if (keyword? form') (s/form form') form')
+               (conj ret {:form form}))))))
 
-(defn traces [ed]
-  (mapv trace (::s/problems ed)))
+(defn traces
+  ([ed] (traces ed nil))
+  ([ed value]
+   (mapv #(trace % (first (:via %)) value)
+         (::s/problems ed))))
