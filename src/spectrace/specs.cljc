@@ -9,7 +9,6 @@
 (defmulti specs-spec
   (fn [form]
     (when (seq? form) (first form))))
-(defmethod specs-spec :default [_] any?)
 
 (s/def ::spec (s/multi-spec specs-spec :s))
 
