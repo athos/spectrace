@@ -27,13 +27,18 @@
                          " must have its own method implementation for spectrace.trace/step*")
                     {:spec spec}))))
 
+(defn- with-cont [succ fail f]
+  (if-let [ret (f)]
+    (succ ret fail)
+    (fail)))
+
 (defmethod step* `s/cat [state succ fail]
-  (let [{[segment & path] :path :keys [spec val in]} state]
-    (if-let [spec' (get (:args spec) segment)]
-      (succ {:spec spec' :path path :in (rest in)
-             :val (nth val (first in))}
-            fail)
-      (fail))))
+  (with-cont succ fail
+    (fn []
+      (let [{[segment & path] :path :keys [spec val in]} state]
+        (when-let [spec' (get (:args spec) segment)]
+          {:spec spec' :path path :in (rest in)
+           :val (nth val (first in))})))))
 
 (defmethod step* `s/& [state succ fail]
   (letfn [(rec [specs]
@@ -46,13 +51,13 @@
       (rec specs))))
 
 (defmethod step* `s/alt [state succ fail]
-  (let [{[segment & path] :path :keys [spec val in]} state]
-    (if-let [spec' (some #(and (= (:key %) segment) (:pred %))
-                         (:args spec))]
-      (succ {:spec spec' :path path :in (rest in)
-             :val (nth val (first in))}
-            fail)
-      (fail))))
+  (with-cont succ fail
+    (fn []
+      (let [{[segment & path] :path :keys [spec val in]} state]
+        (when-let [spec' (some #(and (= (:key %) segment) (:pred %))
+                               (:args spec))]
+          {:spec spec' :path path :in (rest in)
+           :val (nth val (first in))})))))
 
 (defmethod step* `s/* [{:keys [spec] :as state} succ fail]
   (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
