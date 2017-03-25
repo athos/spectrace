@@ -43,8 +43,8 @@
                      " must have its own spec definition"))
         (step* (assoc state :spec spec') succ fail)))))
 
-(defn- with-cont [succ fail f]
-  (if-let [ret (f)]
+(defn- with-cont [succ fail ret]
+  (if ret
     (succ ret fail)
     (fail)))
 
@@ -62,12 +62,11 @@
 
 (defn- step-by-key [{:keys [spec path val in]} succ fail & {:keys [val-fn]}]
   (with-cont succ fail
-    (fn []
-      (let [[segment & path] path, [key & in] in]
-        (when-let [spec' (some #(and (= (:key %) segment) (:pred %))
-                               (:args spec))]
-          {:spec spec' :path path :in in
-           :val (cond-> val val-fn #(val-fn % key))})))))
+    (let [[segment & path] path, [key & in] in]
+      (when-let [spec' (some #(and (= (:key %) segment) (:pred %))
+                             (:args spec))]
+        {:spec spec' :path path :in in
+         :val (cond-> val val-fn #(val-fn % key))}))))
 
 (defmethod step* `s/or [state succ fail]
   (step-by-key state succ fail))
