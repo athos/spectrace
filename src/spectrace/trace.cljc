@@ -7,9 +7,11 @@
 (s/def ::path (s/coll-of keyword?))
 (s/def ::val any?)
 (s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
+(s/def ::spec-name keyword?)
 
 (s/def ::state
-  (s/keys :req-un [::spec ::path ::val ::in]))
+  (s/keys :req-un [::spec ::path ::val ::in]
+          :opt-un [::spec-name]))
 
 (s/def ::succ (s/fspec :args (s/cat :arg ::state) :ret any?))
 (s/def ::fail (s/fspec :args (s/cat) :ret any?))
@@ -26,6 +28,20 @@
     (ex-info (str "spec macro " spec
                   " must have its own method implementation for spectrace.trace/step*")
              {:spec spec})))
+
+(defn- resolve-spec [spec]
+  (cond-> spec
+    (keyword? spec) s/form))
+
+(defn step [{:keys [spec] :as state} succ fail]
+  (let [spec (resolve-spec spec)]
+    (if (symbol? spec)
+      (succ (assoc state :spec spec) fail)
+      (let [spec' (s/conform ::specs/spec spec)]
+        (assert (not= spec' ::s/invalid)
+                (str "spec macro " spec
+                     " must have its own spec definition"))
+        (step* (assoc state :spec spec') succ fail)))))
 
 (defn- with-cont [succ fail f]
   (if-let [ret (f)]
@@ -65,31 +81,27 @@
 (defmethod step* `s/+ [{:keys [spec] :as state} succ fail]
   (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
 
-(defn- step [{:keys [spec] :as state} succ fail]
-  (let [spec (cond-> spec
-               (keyword? spec) s/form)
-        spec' (s/conform ::specs/spec spec)]
-    (assert (not= spec' ::s/invalid)
-            (str "spec macro " (first spec)
-                 " must have its own spec definition"))
-    (step* (assoc state :spec spec) succ fail)))
+(defn- normalize [{:keys [spec path val in]}]
+  (let [spec' (resolve-spec spec)
+        state {:spec spec'
+               :path (vec path)
+               :val val
+               :in (vec in)}]
+    (if (not= spec spec')
+      (assoc state :spec-name spec)
+      (dissoc state :spec-name))))
 
-(defn- trace* [{:keys [path] :as state} fail ret]
-  (if (empty? path)
-    ret
-    (step state
-          (fn [state' fail]
-            (let [state' (-> state'
-                             (update :path vec)
-                             (update :in vec))]
-              #(trace* state' fail (conj ret state'))))
-          (fn [] fail))))
-
-(defn trace [{:keys [path in pred val] :as problem} spec value]
-  (let [state {:spec spec :path path :val value :in in}]
-    (-> (trampoline trace* state (constantly nil) [state])
-        vec
-        (conj {:spec pred :path [] :val val :in []}))))
+(defn trace [{:keys [path in val] :as problem} spec value]
+  (letfn [(rec [{:keys [path] :as state} fail ret]
+            (if (empty? path)
+              ret
+              (step state
+                    (fn [state' fail]
+                      (let [state' (normalize state')]
+                        #(rec state' fail (conj ret state'))))
+                    (fn [] fail))))]
+    (let [state (normalize {:spec spec :path path :val value :in in})]
+      (trampoline rec state (constantly nil) [state]))))
 
 (defn traces
   ([ed] (traces ed nil))
