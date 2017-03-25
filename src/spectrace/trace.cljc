@@ -48,32 +48,40 @@
     (succ ret fail)
     (fail)))
 
-(defmethod step* `s/cat [state succ fail]
-  (with-cont succ fail
-    (fn []
-      (let [{[segment & path] :path :keys [spec val in]} state]
-        (when-let [spec' (get (:args spec) segment)]
-          {:spec spec' :path path :in (rest in)
-           :val (nth val (first in))})))))
-
-(defmethod step* `s/& [state succ fail]
+(defn- choose-spec [specs state succ fail]
   (letfn [(rec [specs]
             (if (empty? specs)
               (fail)
               (succ (assoc state :spec (first specs))
                     #(rec (rest specs)))))]
-    (let [args (get-in state [:spec :args])
-          specs (cons (:re args) (:preds args))]
-      (rec specs))))
+    (rec specs)))
 
-(defmethod step* `s/alt [state succ fail]
+(defmethod step* `s/and [state succ fail]
+  (let [specs (get-in state [:spec :args])]
+    (choose-spec specs state succ fail)))
+
+(defn- step-by-key [{:keys [spec path val in]} succ fail & {:keys [val-fn]}]
   (with-cont succ fail
     (fn []
-      (let [{[segment & path] :path :keys [spec val in]} state]
+      (let [[segment & path] path, [key & in] in]
         (when-let [spec' (some #(and (= (:key %) segment) (:pred %))
                                (:args spec))]
-          {:spec spec' :path path :in (rest in)
-           :val (nth val (first in))})))))
+          {:spec spec' :path path :in in
+           :val (cond-> val val-fn #(val-fn % key))})))))
+
+(defmethod step* `s/or [state succ fail]
+  (step-by-key state succ fail))
+
+(defmethod step* `s/cat [state succ fail]
+  (step-by-key state succ fail :val-fn nth))
+
+(defmethod step* `s/& [state succ fail]
+  (let [args (get-in state [:spec :args])
+        specs (cons (:re args) (:preds args))]
+    (choose-spec specs state succ fail)))
+
+(defmethod step* `s/alt [state succ fail]
+  (step-by-key state succ fail))
 
 (defmethod step* `s/* [{:keys [spec] :as state} succ fail]
   (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
