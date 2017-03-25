@@ -21,11 +21,11 @@
   :ret ::state)
 
 (defmulti step* (fn [state succ fail] (get-in state [:spec :s])))
-(defmethod step* :default [state _ _]
-  (let [spec (:spec state)]
-    (throw (ex-info (str "spec macro " spec
-                         " must have its own method implementation for spectrace.trace/step*")
-                    {:spec spec}))))
+(defmethod step* :default [{:keys [spec]} _ _]
+  (throw
+    (ex-info (str "spec macro " spec
+                  " must have its own method implementation for spectrace.trace/step*")
+             {:spec spec})))
 
 (defn- with-cont [succ fail f]
   (if-let [ret (f)]
