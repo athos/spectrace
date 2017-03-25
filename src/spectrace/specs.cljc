@@ -6,124 +6,127 @@
 ;; internally just for now, and will be removed when the official
 ;; definitions are included in a future release of Clojure 1.9.
 
-(defmulti specs-spec
-  (fn [form]
-    (when (seq? form) (first form))))
+(defmulti spec-form first)
 
-(s/def ::spec (s/multi-spec specs-spec :s))
+(s/def ::spec
+  (s/or :set set?
+        :pred symbol?
+        :keyword qualified-keyword?
+        :form (s/multi-spec spec-form (fn [val tag] val))))
 
-(s/def ::gen any?)
+(s/def ::gen ifn?)
 
-(defmethod specs-spec `s/spec [_]
+(defmethod spec-form `s/spec [_]
   (s/cat :s #{`s/spec}
          :args (s/cat :form any? :opts (s/keys* :opt-un [::gen]))))
 
-(defmethod specs-spec `s/and [_]
+(defmethod spec-form `s/and [_]
   (s/cat :s #{`s/and}
-         :args (s/* any?)))
+         :args (s/* ::spec)))
 
-(s/def ::key+pred-pairs
-  (s/* (s/cat :key keyword? :pred any?)))
+(s/def ::tag+spec-pairs
+  (s/* (s/cat :tag keyword? :spec ::spec)))
 
-(defmethod specs-spec `s/or [_]
+(defmethod spec-form `s/or [_]
   (s/cat :s #{`s/or}
-         :args ::key+pred-pairs))
+         :args ::tag+spec-pairs))
 
-(defmethod specs-spec `s/nilable [_]
+(defmethod spec-form `s/nilable [_]
   (s/cat :s #{`s/nilable}
-         :args (s/cat :pred any?)))
+         :args (s/cat :spec ::spec)))
 
-(defmethod specs-spec `s/tuple [_]
+(defmethod spec-form `s/tuple [_]
   (s/cat :s #{`s/tuple}
-         :args (s/+ any?)))
+         :args (s/* ::spec)))
 
-(s/def ::into #{[] {} #{}})
-(s/def ::kind any?)
-(s/def ::count any?)
-(s/def ::max-count any?)
-(s/def ::min-count any?)
-(s/def ::distinct any?)
-(s/def ::gen-max any?)
+(s/def ::into (s/and coll? empty?))
+(s/def ::kind ifn?)
+(s/def ::count nat-int?)
+(s/def ::max-count nat-int?)
+(s/def ::min-count nat-int?)
+(s/def ::distinct boolean?)
+(s/def ::gen-max nat-int?)
 
-(s/def ::every-opts
+(s/def ::coll-opts
   (s/keys* :opt-un [::into ::kind ::count
                     ::max-count ::min-count
                     ::distinct ::gen-max ::gen]))
 
-(defmethod specs-spec `s/coll-of [_]
+(defmethod spec-form `s/coll-of [_]
   (s/cat :s #{`s/coll-of}
-         :args (s/cat :pred any? :opts ::every-opts)))
+         :args (s/cat :spec ::spec :opts ::coll-opts)))
 
-(defmethod specs-spec `s/map-of [_]
+(defmethod spec-form `s/map-of [_]
   (s/cat :s #{`s/map-of}
-         :args (s/cat :kpred any? :vpred any? :opts ::every-opts)))
+         :args (s/cat :kpred ::spec :vpred ::spec :opts ::coll-opts)))
 
-(defmethod specs-spec `s/every [_]
+(defmethod spec-form `s/every [_]
   (s/cat :s #{`s/every}
-         :args (s/cat :pred any? :opts ::every-opts)))
+         :args (s/cat :spec ::spec :opts ::coll-opts)))
 
-(defmethod specs-spec `s/every-kv [_]
+(defmethod spec-form `s/every-kv [_]
   (s/cat :s #{`s/every-kv}
-         :args (s/cat :kpred any? :vpred any? :opts ::every-opts)))
+         :args (s/cat :kpred ::spec :vpred ::spec :opts ::coll-opts)))
 
-(s/def ::spec-name qualified-keyword?)
-(s/def ::spec-group
-  (s/or :spec ::spec-name
-        :and  (s/cat :op '#{and} :specs (s/* ::spec-group))
-        :or   (s/cat :op '#{or}  :specs (s/* ::spec-group))))
-(s/def ::req
-  (s/* (s/alt :spec ::spec-name
-              :spec-group ::spec-group)))
+(s/def ::key
+  (s/or :key qualified-keyword?
+        :and (s/cat :and '#{and} :keys (s/* ::key))
+        :or  (s/cat :or '#{or}  :keys (s/* ::key))))
+(s/def ::req (s/coll-of ::key :kind vector?))
 (s/def ::req-un ::req)
-(s/def ::opt (s/* ::spec-name))
+(s/def ::opt (s/coll-of qualified-keyword? :kind vector?))
 (s/def ::opt-un ::opt)
 (s/def ::keys-args
-  (s/keys* :opt-un [::req ::req-un ::opt ::opt-un]))
+  (s/keys* :opt-un [::req ::req-un ::opt ::opt-un ::gen]))
 
-(defmethod specs-spec `s/keys [_]
+(defmethod spec-form `s/keys [_]
   (s/cat :s #{`s/keys}
          :args ::keys-args))
 
-(defmethod specs-spec `s/keys* [_]
+(defmethod spec-form `s/keys* [_]
   (s/cat :s #{`s/keys*}
          :args ::keys-args))
 
-(defmethod specs-spec `s/merge [_]
+(defmethod spec-form `s/merge [_]
   (s/cat :s #{`s/merge}
-         :args (s/* any?)))
+         :args (s/* ::spec)))
 
-(defmethod specs-spec `s/cat [_]
+(defmethod spec-form `s/cat [_]
   (s/cat :s #{`s/cat}
-         :args ::key+pred-pairs))
+         :args ::tag+spec-pairs))
 
-(defmethod specs-spec `s/& [_]
+(defmethod spec-form `s/& [_]
   (s/cat :s #{`s/&}
-         :args (s/cat :re any? :preds (s/* any?))))
+         :args (s/cat :regex ::spec :preds (s/* ::spec))))
 
-(defmethod specs-spec `s/alt [_]
+(defmethod spec-form `s/alt [_]
   (s/cat :s #{`s/alt}
-         :args ::key+pred-pairs))
+         :args ::tag+spec-pairs))
 
-(defmethod specs-spec `s/? [_]
+(defmethod spec-form `s/? [_]
   (s/cat :s #{`s/?}
-         :args (s/cat :pred-form any?)))
+         :args (s/cat :pred-form ::spec)))
 
-(defmethod specs-spec `s/* [_]
+(defmethod spec-form `s/* [_]
   (s/cat :s #{`s/*}
-         :args (s/cat :pred-form any?)))
+         :args (s/cat :pred-form ::spec)))
 
-(defmethod specs-spec `s/+ [_]
+(defmethod spec-form `s/+ [_]
   (s/cat :s #{`s/+}
-         :args (s/cat :pred-form any?)))
+         :args (s/cat :pred-form ::spec)))
 
-(s/def ::args any?)
-(s/def ::ret any?)
-(s/def ::fn any?)
+(s/def ::args ::spec)
+(s/def ::ret ::spec)
+(s/def ::fn ::spec)
 
-(defmethod specs-spec `s/fspec [_]
+(defmethod spec-form `s/fspec [_]
   (s/cat :s #{`s/fspec}
-         :args (s/keys* :opt-un [::args ::ret ::fn ::gen])))
+         :args (s/keys* :opt-un [::args ::ret ::fn])))
 
-(defmethod specs-spec `s/multi-spec [_]
+(defmethod spec-form `s/multi-spec [_]
   (s/cat :s #{`s/multi-spec}
-         :args (s/cat :mm any? :retag any?)))
+         :args (s/cat :mm qualified-keyword?
+                      :retag (s/alt :k keyword? :f ifn?))))
+
+(defmethod spec-form `s/conformer [_]
+  (s/cat :fn ifn? :unfn (s/? ifn?)))

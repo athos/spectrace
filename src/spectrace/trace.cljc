@@ -37,7 +37,7 @@
   (let [spec (resolve-spec spec)]
     (if (symbol? spec)
       (succ (assoc state :spec spec) fail)
-      (let [spec' (s/conform ::specs/spec spec)]
+      (let [spec' (s/conform ::specs/spec-form spec)]
         (assert (not= spec' ::s/invalid)
                 (str "spec macro " spec
                      " must have its own spec definition"))
@@ -63,7 +63,7 @@
 (defn- step-by-key [{:keys [spec path val in]} succ fail & {:keys [val-fn]}]
   (with-cont succ fail
     (let [[segment & path] path, [key & in] in]
-      (when-let [spec' (some #(and (= (:key %) segment) (:pred %))
+      (when-let [spec' (some #(and (= (:tag %) segment) (:spec %))
                              (:args spec))]
         {:spec spec' :path path :in in
          :val (cond-> val val-fn #(val-fn % key))}))))
@@ -74,7 +74,7 @@
 (defmethod step* `s/nilable [{:keys [spec] :as state} succ fail]
   (with-cont succ fail
     (-> state
-        (assoc :spec (get-in spec [:args :pred]))
+        (assoc :spec (get-in spec [:args :spec]))
         (update :path rest))))
 
 (defmethod step* `s/tuple [{:keys [spec path val] :as state} succ fail]
@@ -91,7 +91,7 @@
 
 (defmethod step* `s/& [state succ fail]
   (let [args (get-in state [:spec :args])
-        specs (cons (:re args) (:preds args))]
+        specs (cons (:regex args) (:preds args))]
     (choose-spec specs state succ fail)))
 
 (defmethod step* `s/alt [state succ fail]
