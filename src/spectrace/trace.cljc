@@ -8,10 +8,11 @@
 (s/def ::val any?)
 (s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
 (s/def ::spec-name keyword?)
+(s/def ::skip? boolean?)
 
 (s/def ::state
   (s/keys :req-un [::spec ::path ::val ::in]
-          :opt-un [::spec-name]))
+          :opt-un [::spec-name ::skip?]))
 
 (s/def ::succ (s/fspec :args (s/cat :arg ::state) :ret any?))
 (s/def ::fail (s/fspec :args (s/cat) :ret any?))
@@ -28,28 +29,6 @@
     (ex-info (str "spec macro " spec
                   " must have its own method implementation for spectrace.trace/step*")
              {:spec spec})))
-
-(defn- parse-spec [spec]
-  (let [result (s/conform ::specs/spec (s/form spec))]
-    (if (= result ::s/invalid)
-      ::s/invalid
-      (let [[kind spec] result]
-        spec))))
-
-(defn- conformed-spec [spec]
-  (let [spec' (if (keyword? spec)
-                (parse-spec spec)
-                spec)]
-    (assert (not= spec' ::s/invalid)
-            (str "spec macro " spec " must have its own spec definition"))
-    spec'))
-
-(defn step [{:keys [spec] :as state} succ fail]
-  (let [spec (conformed-spec spec)
-        state (assoc state :spec spec)]
-    (if (or (set? spec) (symbol? spec) (keyword? spec))
-      (succ state fail)
-      (step* state succ fail))))
 
 (defn- with-cont [succ fail ret]
   (if ret
@@ -114,10 +93,36 @@
   (step-by-key state succ fail))
 
 (defmethod step* `s/* [{:keys [spec] :as state} succ fail]
-  (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
+  (-> state
+      (update :spec get-in [:args :pred-form])
+      (assoc :skip? true)
+      (succ fail)))
 
 (defmethod step* `s/+ [{:keys [spec] :as state} succ fail]
-  (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
+  (-> state
+      (update :spec get-in [:args :pred-form])
+      (assoc :skip? true)
+      (succ fail)))
+
+(defn- step [{:keys [spec] :as state} succ fail]
+  (if (or (set? spec) (symbol? spec) (keyword? spec))
+    (succ state fail)
+    (step* state succ fail)))
+
+(defn- parse-spec [spec]
+  (let [result (s/conform ::specs/spec (s/form spec))]
+    (if (= result ::s/invalid)
+      result
+      (let [[kind spec] result]
+        spec))))
+
+(defn- conformed-spec [spec]
+  (let [spec' (if (keyword? spec)
+                (parse-spec spec)
+                spec)]
+    (assert (not= spec' ::s/invalid)
+            (str "spec macro " spec " must have its own spec definition"))
+    spec'))
 
 (defn- normalize [{:keys [spec path val in]}]
   (let [spec' (conformed-spec spec)
@@ -134,11 +139,12 @@
             (if (empty? path)
               ret
               (step state
-                    (fn [state' fail]
+                    (fn [{:keys [skip?] :as state'} fail]
                       (let [state' (-> state'
                                        (update :spec second)
-                                       normalize)]
-                        #(rec state' fail (conj ret state'))))
+                                       normalize)
+                            ret' (if skip? ret (conj ret state'))]
+                        #(rec state' fail ret')))
                     (fn [] fail))))]
     (let [state (normalize {:spec spec :path path :val value :in in})]
       (trampoline rec state (constantly nil) [state]))))
