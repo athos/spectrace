@@ -29,19 +29,27 @@
                   " must have its own method implementation for spectrace.trace/step*")
              {:spec spec})))
 
-(defn- resolve-spec [spec]
-  (cond-> spec
-    (keyword? spec) s/form))
+(defn- parse-spec [spec]
+  (let [result (s/conform ::specs/spec (s/form spec))]
+    (if (= result ::s/invalid)
+      ::s/invalid
+      (let [[kind spec] result]
+        spec))))
+
+(defn- conformed-spec [spec]
+  (let [spec' (if (keyword? spec)
+                (parse-spec spec)
+                spec)]
+    (assert (not= spec' ::s/invalid)
+            (str "spec macro " spec " must have its own spec definition"))
+    spec'))
 
 (defn step [{:keys [spec] :as state} succ fail]
-  (let [spec (resolve-spec spec)]
-    (if (symbol? spec)
-      (succ (assoc state :spec spec) fail)
-      (let [spec' (s/conform ::specs/spec-form spec)]
-        (assert (not= spec' ::s/invalid)
-                (str "spec macro " spec
-                     " must have its own spec definition"))
-        (step* (assoc state :spec spec') succ fail)))))
+  (let [spec (conformed-spec spec)
+        state (assoc state :spec spec)]
+    (if (or (set? spec) (symbol? spec) (keyword? spec))
+      (succ state fail)
+      (step* state succ fail))))
 
 (defn- with-cont [succ fail ret]
   (if ret
@@ -104,7 +112,7 @@
   (step (assoc state :spec (get-in spec [:args :pred-form])) succ fail))
 
 (defn- normalize [{:keys [spec path val in]}]
-  (let [spec' (resolve-spec spec)
+  (let [spec' (conformed-spec spec)
         state {:spec spec'
                :path (vec path)
                :val val
@@ -119,7 +127,9 @@
               ret
               (step state
                     (fn [state' fail]
-                      (let [state' (normalize state')]
+                      (let [state' (-> state'
+                                       (update :spec second)
+                                       normalize)]
                         #(rec state' fail (conj ret state'))))
                     (fn [] fail))))]
     (let [state (normalize {:spec spec :path path :val value :in in})]
