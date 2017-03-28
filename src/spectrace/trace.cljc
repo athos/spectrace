@@ -94,6 +94,14 @@
                  :val (nth val segment))
           (update :in rest)))))
 
+(defmethod step* `s/coll-of [{:keys [val in] :as state} succ fail]
+  (with-cont succ fail
+    (let [[key & in] in]
+      (-> state
+          (update :spec get-in [:args :spec])
+          (assoc :val (nth val key))
+          (assoc :in in)))))
+
 (defmethod step* `s/cat [state succ fail]
   (step-by-key state succ fail :val-fn nth))
 
