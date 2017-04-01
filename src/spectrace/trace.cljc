@@ -76,10 +76,11 @@
 (defn- step-for-every [{:keys [val in] :as state} succ fail]
   (with-cont succ fail
     (let [[key & in] in]
-      (-> state
-          (update :spec get-in [:args :spec])
-          (assoc :val (nth val key))
-          (assoc :in in)))))
+      (when (and (vector? val) (> (count val) key))
+        (-> state
+            (update :spec get-in [:args :spec])
+            (assoc :val (nth val key))
+            (assoc :in in))))))
 
 (defmethod step* `s/every [state succ fail]
   (step-for-every state succ fail))
@@ -87,15 +88,19 @@
 (defmethod step* `s/coll-of [state succ fail]
   (step-for-every state succ fail))
 
-(defn- step-for-every-kv [{:keys [path val in] :as state} succ fail]
+(defn- step-for-every-kv [{:keys [spec path val in] :as state} succ fail]
   (with-cont succ fail
     (let [[segment & path] path
-          [key1 key2 & in] in]
-      (-> state
-          (update :spec get-in [:args (case segment 0 :kpred 1 :vpred)])
-          (assoc :path path
-                 :val (-> val (find key1) (nth key2))
-                 :in in)))))
+          [key1 key2 & in] in
+          pred-key (case segment 0 :kpred 1 :vpred nil)]
+      (when (and pred-key
+                 (contains? (:args spec) pred-key)
+                 (map? val)
+                 (contains? val key1))
+        {:spec (get-in spec [:args pred-key])
+         :path path
+         :val (-> val (find key1) (nth key2))
+         :in in}))))
 
 (defmethod step* `s/map-of [state succ fail]
   (step-for-every-kv state succ fail))
