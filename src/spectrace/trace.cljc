@@ -2,9 +2,8 @@
   (:require [clojure.spec :as s]
             [spectrace.specs :as specs]))
 
-(s/def ::s symbol?)
-(s/def ::spec (s/keys :req-un [::s]))
-(s/def ::path (s/coll-of keyword?))
+(s/def ::spec any?)
+(s/def ::path (s/coll-of (s/or :keyword keyword? :int integer?)))
 (s/def ::val any?)
 (s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
 (s/def ::spec-name keyword?)
