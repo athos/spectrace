@@ -147,6 +147,10 @@
             (get keys key))]
     (step-for-keys state succ fail get-key)))
 
+(defmethod step* `s/merge [state succ fail]
+  (let [specs (get-in state [:spec :args])]
+    (choose-spec specs state succ fail)))
+
 (defmethod step* `s/cat [state succ fail]
   (step-by-key state succ fail :val-fn nth))
 
