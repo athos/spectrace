@@ -121,18 +121,22 @@
         (into (map (fn [k] [(keyword (name k)) k]))
               (collect-keys (set (:opt-un args)) (:req-un args))))))
 
-(defn- step-for-keys [{:keys [spec path val in]} succ fail val-fn]
+(defn- step-for-keys [{:keys [path val pred] :as state} succ fail val-fn]
   (with-cont succ fail
-    (let [[segment & path] path
-          [key & in] in
-          keys (possible-keys spec)]
-      (when (and (contains? keys segment)
-                 (map? val)
-                 (contains? val key))
-        {:spec (get keys segment)
-         :path path
-         :val (val-fn val key)
-         :in in}))))
+    (let [keys (possible-keys (:spec state))]
+      (if (empty? path)
+        (when (and (seq? pred) (= (first pred) 'contains?)
+                   (contains? keys (nth pred 2)))
+          (assoc state :spec pred))
+        (let [[segment & path] path
+              [key & in] (:in state)]
+          (when (and (contains? keys segment)
+                     (map? val)
+                     (contains? val key))
+            {:spec (get keys segment)
+             :path path
+             :val (val-fn val key)
+             :in in}))))))
 
 (defmethod step* `s/keys [state succ fail]
   (step-for-keys state succ fail get))
@@ -202,7 +206,7 @@
               ret
               (step (assoc state :pred pred)
                     (fn [{:keys [spec skip?] :as state'} fail]
-                      (let [spec (if (keyword? spec) spec (second spec))
+                      (let [spec (if (vector? spec) (second spec) spec)
                             state' (normalize (assoc state' :spec spec))
                             ret' (if skip? ret (conj ret state'))]
                         #(rec state' fail ret')))
