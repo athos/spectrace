@@ -6,11 +6,12 @@
 (s/def ::path (s/coll-of (s/or :keyword keyword? :int integer?)))
 (s/def ::val any?)
 (s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
+(s/def ::pred any?)
 (s/def ::spec-name keyword?)
 (s/def ::skip? boolean?)
 
 (s/def ::state
-  (s/keys :req-un [::spec ::path ::val ::in]
+  (s/keys :req-un [::spec ::path ::val ::in ::pred]
           :opt-un [::spec-name ::skip?]))
 
 (s/def ::succ (s/fspec :args (s/cat :arg ::state) :ret any?))
@@ -195,11 +196,11 @@
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))
 
-(defn trace [{:keys [path in val] :as problem} spec value]
-  (letfn [(rec [{:keys [path] :as state} fail ret]
-            (if (empty? path)
+(defn trace [{:keys [path in val pred] :as problem} spec value]
+  (letfn [(rec [{:keys [spec] :as state} fail ret]
+            (if (or (= spec pred) (symbol? spec) (seq? spec))
               ret
-              (step state
+              (step (assoc state :pred pred)
                     (fn [{:keys [spec skip?] :as state'} fail]
                       (let [spec (if (keyword? spec) spec (second spec))
                             state' (normalize (assoc state' :spec spec))
