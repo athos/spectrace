@@ -200,9 +200,11 @@
                :path (vec path)
                :val val
                :in (vec in)}]
-    (if (not= spec spec')
-      (assoc state :spec-name spec)
-      (dissoc state :spec-name))))
+    (if (= spec spec')
+      (dissoc state :spec-name)
+      (cond-> (assoc state :spec-name spec)
+        (:f spec')
+        (assoc :spec `(fn ~(:args spec') ~@(:body spec')))) )))
 
 (defn trace [{:keys [path in val pred] :as problem} spec value]
   (letfn [(rec [{:keys [spec] :as state} fail ret]

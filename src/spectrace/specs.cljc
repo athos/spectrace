@@ -1,6 +1,7 @@
 (ns spectrace.specs
-  (:require [clojure.spec :as s]
-            [clojure.core.specs :as specs]))
+  (:require [clojure.core :as cc]
+            [clojure.core.specs :as specs]
+            [clojure.spec :as s]))
 
 ;; These spec definitions for spec macros are intended to be only used
 ;; internally just for now, and will be removed when the official
@@ -13,6 +14,11 @@
         :pred symbol?
         :keyword qualified-keyword?
         :form (s/multi-spec spec-form (fn [val tag] val))))
+
+(defmethod spec-form `cc/fn [_]
+  (s/cat :f #{`cc/fn}
+         :args (s/and vector? #(= 1 (count %)))
+         :body (s/* any?)))
 
 (s/def ::gen ifn?)
 
