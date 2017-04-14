@@ -1,6 +1,6 @@
 # spectrace
 
-A utility library to trace and enumerate specs involved in a given spec error
+clojure.spec library aiming to be a fundamental tool for analyzing spec errors
 
 ## Usage
 
