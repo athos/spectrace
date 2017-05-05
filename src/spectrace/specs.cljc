@@ -1,7 +1,6 @@
 (ns spectrace.specs
   (:require [clojure.core :as cc]
-            [clojure.core.specs :as specs]
-            [clojure.spec :as s]))
+            [clojure.spec.alpha :as s]))
 
 ;; These spec definitions for spec macros are intended to be only used
 ;; internally just for now, and will be removed when the official

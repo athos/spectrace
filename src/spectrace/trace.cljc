@@ -1,5 +1,5 @@
 (ns spectrace.trace
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [spectrace.specs :as specs]))
 
 (s/def ::spec any?)
