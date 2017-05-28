@@ -220,8 +220,5 @@
     (let [state (normalize {:spec spec :path path :val value :in in})]
       (trampoline rec state (constantly nil) [state]))))
 
-(defn traces
-  ([ed] (traces ed nil))
-  ([ed value]
-   (mapv #(trace % (first (:via %)) value)
-         (::s/problems ed))))
+(defn traces [{:keys [::s/spec ::s/value] :as ed}]
+  (mapv #(trace % (s/form spec) value) (::s/problems ed)))
