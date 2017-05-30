@@ -8,11 +8,10 @@
 (s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
 (s/def ::pred any?)
 (s/def ::spec-name keyword?)
-(s/def ::skip? boolean?)
 
 (s/def ::state
   (s/keys :req-un [::spec ::path ::val ::in ::pred]
-          :opt-un [::spec-name ::skip?]))
+          :opt-un [::spec-name]))
 
 (s/def ::succ (s/fspec :args (s/cat :arg ::state) :ret any?))
 (s/def ::fail (s/fspec :args (s/cat) :ret any?))
@@ -23,7 +22,7 @@
                :fail  ::fail)
   :ret ::state)
 
-(defmulti step* (fn [state succ fail] (get-in state [:spec :s])))
+(defmulti step* (fn [state succ fail] (first (:spec state))))
 (defmethod step* :default [{:keys [spec]} _ _]
   (throw
     (ex-info (str "spec macro " spec
@@ -44,14 +43,14 @@
     (rec specs)))
 
 (defmethod step* `s/and [state succ fail]
-  (let [specs (get-in state [:spec :args])]
+  (let [specs (rest (:spec state))]
     (choose-spec specs state succ fail)))
 
 (defn- step-by-key [{:keys [spec path val in]} succ fail & {:keys [val-fn]}]
   (with-cont succ fail
     (let [[segment & path] path, [key & in] in]
-      (when-let [spec' (some #(and (= (:tag %) segment) (:spec %))
-                             (:args spec))]
+      (when-let [spec' (some (fn [[tag spec]] (and (= tag segment) spec))
+                             (partition 2 (rest spec)))]
         {:spec spec' :path path :in in
          :val (cond-> val val-fn #(val-fn % key))}))))
 
@@ -61,14 +60,14 @@
 (defmethod step* `s/nilable [{:keys [spec] :as state} succ fail]
   (with-cont succ fail
     (-> state
-        (assoc :spec (get-in spec [:args :spec]))
+        (assoc :spec (second spec))
         (update :path rest))))
 
 (defmethod step* `s/tuple [{:keys [spec path val] :as state} succ fail]
   (with-cont succ fail
     (let [[segment & path] path]
       (-> state
-          (assoc :spec (nth (:args spec) segment)
+          (assoc :spec (nth spec segment)
                  :path path
                  :val (nth val segment))
           (update :in rest)))))
@@ -78,7 +77,7 @@
     (let [[key & in] in]
       (when (and (vector? val) (> (count val) key))
         (-> state
-            (update :spec get-in [:args :spec])
+            (update :spec second)
             (assoc :val (nth val key))
             (assoc :in in))))))
 
@@ -92,12 +91,13 @@
   (with-cont succ fail
     (let [[segment & path] path
           [key1 key2 & in] in
-          pred-key (case segment 0 :kpred 1 :vpred nil)]
+          pred-key (get #{0 1} segment)
+          specs (take 2 (rest spec))]
       (when (and pred-key
-                 (contains? (:args spec) pred-key)
+                 (< pred-key (count specs))
                  (map? val)
                  (contains? val key1))
-        {:spec (get-in spec [:args pred-key])
+        {:spec (nth specs pred-key)
          :path path
          :val (-> val (find key1) (nth key2))
          :in in}))))
@@ -148,77 +148,59 @@
     (step-for-keys state succ fail get-key)))
 
 (defmethod step* `s/merge [state succ fail]
-  (let [specs (get-in state [:spec :args])]
-    (choose-spec specs state succ fail)))
+  (choose-spec (rest (:spec state)) state succ fail))
 
 (defmethod step* `s/cat [state succ fail]
   (step-by-key state succ fail :val-fn nth))
 
 (defmethod step* `s/& [state succ fail]
-  (let [args (get-in state [:spec :args])
-        specs (cons (:regex args) (:preds args))]
-    (choose-spec specs state succ fail)))
+  (choose-spec (rest (:spec state)) state succ fail))
 
 (defmethod step* `s/alt [state succ fail]
   (step-by-key state succ fail))
 
-(defmethod step* `s/* [{:keys [spec] :as state} succ fail]
-  (-> state
-      (update :spec get-in [:args :pred-form])
-      (assoc :skip? true)
-      (succ fail)))
+(defmethod step* `s/* [{:keys [val in] :as state} succ fail]
+  (let [[key & in] in]
+    (-> state
+        (update :spec second)
+        (assoc :val (nth val key) :in in)
+        (succ fail))))
 
-(defmethod step* `s/+ [{:keys [spec] :as state} succ fail]
-  (-> state
-      (update :spec get-in [:args :pred-form])
-      (assoc :skip? true)
-      (succ fail)))
+(defmethod step* `s/+ [{:keys [val in] :as state} succ fail]
+  (let [[key & in] in]
+    (-> state
+        (update :spec second)
+        (assoc :val (nth val key) :in in)
+        (succ fail))))
 
 (defn- step [{:keys [spec] :as state} succ fail]
   (if (or (set? spec) (symbol? spec) (keyword? spec))
     (succ state fail)
     (step* state succ fail)))
 
-(defn- parse-spec [spec]
-  (let [result (s/conform ::specs/spec (s/form spec))]
-    (if (= result ::s/invalid)
-      result
-      (let [[kind spec] result]
-        spec))))
-
-(defn- conformed-spec [spec]
-  (let [spec' (if (keyword? spec)
-                (parse-spec spec)
-                spec)]
-    (assert (not= spec' ::s/invalid)
-            (str "spec macro " spec " must have its own spec definition"))
-    spec'))
-
 (defn- normalize [{:keys [spec path val in]}]
-  (let [spec' (conformed-spec spec)
+  (let [spec' (if (or (keyword? spec) (s/spec? spec) (s/regex? spec))
+                (s/form spec)
+                spec)
         state {:spec spec'
                :path (vec path)
                :val val
                :in (vec in)}]
-    (if (= spec spec')
-      (dissoc state :spec-name)
-      (cond-> (assoc state :spec-name spec)
-        (:f spec')
-        (assoc :spec `(fn ~(:args spec') ~@(:body spec')))) )))
+    (if (keyword? spec)
+      (assoc state :spec-name spec)
+      (dissoc state :spec-name))))
 
 (defn trace [{:keys [path in val pred] :as problem} spec value]
   (letfn [(rec [{:keys [spec] :as state} fail ret]
-            (if (or (= spec pred) (symbol? spec) (seq? spec))
+            (if (= spec pred)
               ret
               (step (assoc state :pred pred)
-                    (fn [{:keys [spec skip?] :as state'} fail]
-                      (let [spec (if (vector? spec) (second spec) spec)
-                            state' (normalize (assoc state' :spec spec))
-                            ret' (if skip? ret (conj ret state'))]
-                        #(rec state' fail ret')))
+                    (fn [{:keys [spec] :as state'} fail]
+                      (let [state' (normalize state')]
+                        #(rec state' fail (conj ret state'))))
                     (fn [] fail))))]
     (let [state (normalize {:spec spec :path path :val value :in in})]
       (trampoline rec state (constantly nil) [state]))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
-  (mapv #(trace % (s/form spec) value) (::s/problems ed)))
+  (mapv #(trace % spec value) (::s/problems ed)))
