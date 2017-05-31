@@ -1,4 +1,4 @@
-# spectrace
+# spectrace [![CircleCI](https://circleci.com/gh/athos/spectrace.svg?style=svg)](https://circleci.com/gh/athos/spectrace)
 
 clojure.spec library aiming to be a fundamental tool for analyzing spec errors
 
