@@ -1,5 +1,5 @@
 (defproject spectrace "0.1.0-SNAPSHOT"
-  :description "A utility library to trace and enumerate specs involved in a given spec error"
+  :description "clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors"
   :url "https://github.com/athos/spectrace"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
