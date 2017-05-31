@@ -31,7 +31,7 @@ user=> ed
                        :val {:x :a}, :via [:user/m], :in []}), :spec :user/m, :value {:x :a}}
 ```
 
-This might be useful enough as it is to make simple error messages, but in some cases it's insufficient.
+Although this might be useful enough as it is to make simple error messages, it's not sufficient in some cases.
 
 *spectrace* will help us in such a situation:
 
