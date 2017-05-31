@@ -52,7 +52,7 @@
       (when-let [spec' (some (fn [[tag spec]] (and (= tag segment) spec))
                              (partition 2 (rest spec)))]
         {:spec spec' :path path :in in
-         :val (cond-> val val-fn #(val-fn % key))}))))
+         :val (cond-> val val-fn (val-fn key))}))))
 
 (defmethod step* `s/or [state succ fail]
   (step-by-key state succ fail))
@@ -63,14 +63,15 @@
         (assoc :spec (second spec))
         (update :path rest))))
 
-(defmethod step* `s/tuple [{:keys [spec path val] :as state} succ fail]
+(defmethod step* `s/tuple [{:keys [spec path val in] :as state} succ fail]
   (with-cont succ fail
-    (let [[segment & path] path]
+    (let [[segment & path] path
+          [key & in] in]
       (-> state
-          (assoc :spec (nth spec segment)
+          (assoc :spec (nth (rest spec) segment)
                  :path path
-                 :val (nth val segment))
-          (update :in rest)))))
+                 :val (nth val key)
+                 :in in)))))
 
 (defn- step-for-every [{:keys [val in] :as state} succ fail]
   (with-cont succ fail
@@ -157,7 +158,7 @@
   (choose-spec (rest (:spec state)) state succ fail))
 
 (defmethod step* `s/alt [state succ fail]
-  (step-by-key state succ fail))
+  (step-by-key state succ fail :val-fn nth))
 
 (defmethod step* `s/* [{:keys [val in] :as state} succ fail]
   (let [[key & in] in]
