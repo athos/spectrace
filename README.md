@@ -59,6 +59,15 @@ user=>
 
 It traces and enumerates all the specs involved in the spec error and makes it easy to build more structured error messages.
 
+## Issues to be addressed
+
+The following is a list of spec.alpha issues that I'm aware are to be addressed before a final release of spectrace:
+
+- [[CLJ-2068] s/explain of evaluated predicate yields :s/unknown](https://dev.clojure.org/jira/browse/CLJ-2068)
+- [[CLJ-2143] The result of s/form for s/keys\* is different from the original form](https://dev.clojure.org/jira/browse/CLJ-2143)
+- [[CLJ-2152] clojure.spec: s/& has a broken form](https://dev.clojure.org/jira/browse/CLJ-2152)
+- [[CLJ-2168] clojure.spec: :pred in explain for coll-of does't use resolved symbols](https://dev.clojure.org/jira/browse/CLJ-2168)
+
 ## License
 
 Copyright © 2017 Shogo Ohta
