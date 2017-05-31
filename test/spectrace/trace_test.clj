@@ -37,6 +37,13 @@
        :in []}
       {:spec `string? :path [] :val :a :in []}]]
 
+    (s/nilable integer?)
+    :a
+    [[{:spec `(s/nilable integer?) :path [::s/pred] :val :a :in []}
+      {:spec `integer? :path [] :val :a :in []}]
+     [{:spec `(s/nilable integer?) :path [::s/nil] :val :a :in []}
+      {:spec 'nil? :path [] :val :a :in []}]]
+
     (s/tuple integer? string?)
     [1 :a]
     [[{:spec `(s/tuple integer? string?) :path [1] :val [1 :a] :in [1]}

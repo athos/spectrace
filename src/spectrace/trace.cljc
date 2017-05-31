@@ -57,11 +57,14 @@
 (defmethod step* `s/or [state succ fail]
   (step-by-key state succ fail))
 
-(defmethod step* `s/nilable [{:keys [spec] :as state} succ fail]
+(defmethod step* `s/nilable [{:keys [path] :as state} succ fail]
   (with-cont succ fail
-    (-> state
-        (assoc :spec (second spec))
-        (update :path rest))))
+    (let [[segment & path] path
+          state (assoc state :path path)]
+      (case segment
+        ::s/pred (update state :spec second)
+        ::s/nil (assoc state :spec 'nil?)
+        nil))))
 
 (defmethod step* `s/tuple [{:keys [spec path val in] :as state} succ fail]
   (with-cont succ fail
