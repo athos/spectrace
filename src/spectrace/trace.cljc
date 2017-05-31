@@ -193,13 +193,19 @@
 
 (defn trace [{:keys [path in val pred] :as problem} spec value]
   (letfn [(rec [{:keys [spec] :as state} fail ret]
-            (if (= spec pred)
-              ret
-              (step (assoc state :pred pred)
-                    (fn [{:keys [spec] :as state'} fail]
-                      (let [state' (normalize state')]
-                        #(rec state' fail (conj ret state'))))
-                    (fn [] fail))))]
+            (cond (= spec pred)
+                  ret
+
+                  ;; immature failure condition
+                  (symbol? spec)
+                  fail
+
+                  :else
+                  (step (assoc state :pred pred)
+                        (fn [state' fail]
+                          (let [state' (normalize state')]
+                            #(rec state' fail (conj ret state'))))
+                        (fn [] fail))))]
     (let [state (normalize {:spec spec :path path :val value :in in})]
       (trampoline rec state (constantly nil) [state]))))
 
