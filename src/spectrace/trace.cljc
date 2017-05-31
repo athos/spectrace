@@ -112,11 +112,11 @@
 (defmethod step* `s/every-kv [state succ fail]
   (step-for-every-kv state succ fail))
 
-(defn- possible-keys [{:keys [args]}]
-  (letfn [(walk [ret [kind arg]]
-            (case kind
-              :key (conj ret arg)
-              (:and :or) (collect-keys ret (:keys arg))))
+(defn- possible-keys [[& {:as args}]]
+  (letfn [(walk [ret maybe-key]
+            (if (keyword? maybe-key)
+              (conj ret maybe-key)
+              (collect-keys ret (rest maybe-key))))
           (collect-keys [ret keys]
             (reduce walk ret keys))]
     (-> {}
@@ -125,12 +125,16 @@
         (into (map (fn [k] [(keyword (name k)) k]))
               (collect-keys (set (:opt-un args)) (:req-un args))))))
 
-(defn- step-for-keys [{:keys [path val pred] :as state} succ fail val-fn]
+(defn- step-for-keys [{:keys [spec path val pred] :as state} succ fail
+                      & {:keys [val-fn]}]
   (with-cont succ fail
-    (let [keys (possible-keys (:spec state))]
+    (let [keys (possible-keys (rest spec))
+          fn? (s/cat :fn `#{fn} :args vector?
+                     :body (s/and seq?
+                                  (s/cat :f `#{contains?} :arg '#{%}
+                                         :key #(contains? keys %))))]
       (if (empty? path)
-        (when (and (seq? pred) (= (first pred) 'contains?)
-                   (contains? keys (nth pred 2)))
+        (when (s/valid? fn? pred)
           (assoc state :spec pred))
         (let [[segment & path] path
               [key & in] (:in state)]
@@ -139,11 +143,11 @@
                      (contains? val key))
             {:spec (get keys segment)
              :path path
-             :val (val-fn val key)
+             :val (cond-> val val-fn (val-fn key))
              :in in}))))))
 
 (defmethod step* `s/keys [state succ fail]
-  (step-for-keys state succ fail get))
+  (step-for-keys state succ fail :val-fn get))
 
 ;; Add this after CLJ-2143 is fixed
 #_(defmethod step* `s/keys* [state succ fail]

@@ -5,6 +5,7 @@
 
 (s/def ::x integer?)
 (s/def ::y string?)
+(s/def ::z keyword?)
 
 (deftest traces-test
   (are [spec data expected]
@@ -85,6 +86,26 @@
        :val {:a :b}
        :in [:a 1]}
       {:spec `string? :path [] :val :b :in []}]]
+
+    (s/keys :req-un [::x ::y])
+    {}
+    [[{:spec `(s/keys :req-un [::x ::y]) :path [] :val {} :in []}
+      {:spec `(fn [~'%] (contains? ~'% :x)) :path [] :val {} :in []}]
+     [{:spec `(s/keys :req-un [::x ::y]) :path [] :val {} :in []}
+      {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {} :in []}]]
+
+    (s/keys :opt-un [::x])
+    {:x :a}
+    [[{:spec `(s/keys :opt-un [::x]) :path [:x] :val {:x :a} :in [:x]}
+      {:spec `integer? :path [] :val :a :in [] :spec-name ::x}]]
+
+    (s/keys :req [(or ::x (and ::y ::z))])
+    {::y "foo" ::z 42}
+    [[{:spec `(s/keys :req [(~'or ::x (~'and ::y ::z))])
+       :path [::z]
+       :val {::y "foo" ::z 42}
+       :in [::z]}
+      {:spec `keyword? :path [] :val 42 :in [] :spec-name ::z}]]
 
     (s/cat :int integer? :str string?)
     [1 :b]
