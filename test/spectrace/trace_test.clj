@@ -107,6 +107,21 @@
        :in [::z]}
       {:spec `keyword? :path [] :val 42 :in [] :spec-name ::z}]]
 
+    (s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+    {:x :a}
+    [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path [:x]
+       :val {:x :a}
+       :in [:x]}
+      {:spec `(s/keys :req-un [::x]) :path [:x] :val {:x :a} :in [:x]}
+      {:spec `integer? :path [] :val :a :in [] :spec-name ::x}]
+     [{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path []
+       :val {:x :a}
+       :in []}
+      {:spec `(s/keys :req-un [::y]) :path [] :val {:x :a} :in []}
+      {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {:x :a} :in []}]]
+
     (s/cat :int integer? :str string?)
     [1 :b]
     [[{:spec `(s/cat :int integer? :str string?)
