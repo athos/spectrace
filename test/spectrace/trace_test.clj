@@ -19,6 +19,11 @@
     [[{:spec `integer? :path [] :val :a :in []
        :spec-name ::x}]]
 
+    (s/and integer? even?)
+    3
+    [[{:spec `(s/and integer? even?) :path [] :val 3 :in []}
+      {:spec `even? :path [] :val 3 :in []}]]
+
     (s/or :int integer? :str string?)
     :a
     [[{:spec `(s/or :int integer? :str string?)
