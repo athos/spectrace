@@ -49,6 +49,17 @@
     [[{:spec `(s/tuple integer? string?) :path [1] :val [1 :a] :in [1]}
       {:spec `string? :path [] :val :a :in []}]]
 
+    ;; Can't test them until CLJ-2168 will be fixed
+    #_(s/coll-of integer?)
+    #_[1 :a]
+    #_[[{:spec `(s/coll-of integer?) :path [] :val [1 :a] :in [1]}
+      {:spec `integer? :path [] :val :a :in []}]]
+
+    #_(s/every integer?)
+    #_[1 :a]
+    #_[[{:spec `(s/every integer?) :path [] :val [1 :a] :in [1]}
+      {:spec `integer? :path [] :val :a :in []}]]
+
     (s/map-of integer? string?)
     {:a :b}
     [[{:spec `(s/map-of integer? string?)
