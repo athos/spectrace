@@ -167,19 +167,21 @@
 (defmethod step* `s/alt [state succ fail]
   (step-by-key state succ fail :val-fn nth))
 
-(defmethod step* `s/* [{:keys [val in] :as state} succ fail]
+(defn- step-for-rep [{:keys [val in] :as state} succ fail]
   (let [[key & in] in]
     (-> state
         (update :spec second)
         (assoc :val (nth val key) :in in)
         (succ fail))))
 
-(defmethod step* `s/+ [{:keys [val in] :as state} succ fail]
-  (let [[key & in] in]
-    (-> state
-        (update :spec second)
-        (assoc :val (nth val key) :in in)
-        (succ fail))))
+(defmethod step* `s/? [state succ fail]
+  (step-for-rep state succ fail))
+
+(defmethod step* `s/* [state succ fail]
+  (step-for-rep state succ fail))
+
+(defmethod step* `s/+ [state succ fail]
+  (step-for-rep state succ fail))
 
 (defn- step [{:keys [spec] :as state} succ fail]
   (if (or (set? spec) (symbol? spec) (keyword? spec))

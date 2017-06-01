@@ -170,6 +170,11 @@
        :in [0]}
       {:spec `string? :path [] :val :a :in []}]]
 
+    (s/? integer?)
+    [:a]
+    [[{:spec `(s/? integer?) :path [] :val [:a] :in [0]}
+      {:spec `integer? :path [] :val :a :in []}]]
+
     (s/* integer?)
     [1 :a 3]
     [[{:spec `(s/* integer?) :path [] :val [1 :a 3] :in [1]}
