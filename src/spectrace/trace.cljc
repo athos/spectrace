@@ -128,14 +128,14 @@
 (defn- step-for-keys [{:keys [spec path val pred] :as state} succ fail
                       & {:keys [val-fn]}]
   (with-cont succ fail
-    (let [keys (possible-keys (rest spec))
-          fn? (s/cat :fn `#{fn} :args vector?
-                     :body (s/and seq?
-                                  (s/cat :f `#{contains?} :arg '#{%}
-                                         :key #(contains? keys %))))]
+    (let [keys (possible-keys (rest spec))]
       (if (empty? path)
-        (when (s/valid? fn? pred)
-          (assoc state :spec pred))
+        (let [fn? (s/cat :fn `#{fn} :args (s/tuple '#{%})
+                         :body (s/and seq?
+                                      (s/cat :f `#{contains?} :arg '#{%}
+                                             :key #(contains? keys %))))]
+          (when (s/valid? fn? pred)
+            (assoc state :spec pred)))
         (let [[segment & path] path
               [key & in] (:in state)]
           (when (and (contains? keys segment)
