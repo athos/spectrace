@@ -66,15 +66,21 @@
         ::s/nil (assoc state :spec 'nil?)
         nil))))
 
-(defmethod step* `s/tuple [{:keys [spec path val in] :as state} succ fail]
+(defmethod step* `s/tuple [{:keys [spec path val in pred] :as state} succ fail]
   (with-cont succ fail
-    (let [[segment & path] path
-          [key & in] in]
-      (-> state
-          (assoc :spec (nth (rest spec) segment)
-                 :path path
-                 :val (nth val key)
-                 :in in)))))
+    (if (empty? path)
+      (when (or (= pred 'vector?)
+                (s/valid? (s/cat := `#{=} :count `#{(count ~'%)}
+                                 :n integer?)
+                          pred))
+        (assoc state :spec pred))
+      (let [[segment & path] path
+            [key & in] in]
+        (-> state
+            (assoc :spec (nth (rest spec) segment)
+                   :path path
+                   :val (nth val key)
+                   :in in))))))
 
 (defn- step-for-every [{:keys [val in] :as state} succ fail]
   (with-cont succ fail

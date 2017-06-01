@@ -50,6 +50,19 @@
     [[{:spec `(s/tuple integer? string?) :path [1] :val [1 :a] :in [1]}
       {:spec `string? :path [] :val :a :in []}]]
 
+    (s/tuple integer?)
+    {}
+    [[{:spec `(s/tuple integer?) :path [] :val {} :in []}
+      {:spec 'vector? :path [] :val {} :in []}]]
+
+    (s/tuple integer? string?)
+    [1 "foo" 3]
+    [[{:spec `(s/tuple integer? string?)
+       :path []
+       :val [1 "foo" 3]
+       :in []}
+      {:spec `(= (count ~'%) 2) :path [] :val [1 "foo" 3] :in []}]]
+
     ;; Can't test them until CLJ-2168 will be fixed
     #_(s/coll-of integer?)
     #_[1 :a]
