@@ -67,6 +67,9 @@ The following is a list of spec.alpha issues that I'm aware are to be addressed 
 - [[CLJ-2143] The result of s/form for s/keys\* is different from the original form](https://dev.clojure.org/jira/browse/CLJ-2143)
 - [[CLJ-2152] clojure.spec: s/& has a broken form](https://dev.clojure.org/jira/browse/CLJ-2152)
 - [[CLJ-2168] clojure.spec: :pred in explain for coll-of does't use resolved symbols](https://dev.clojure.org/jira/browse/CLJ-2168)
+- [[CLJ-2176] s/tuple explain-data :pred problems](https://dev.clojure.org/jira/browse/CLJ-2176)
+- [[CLJ-2177] s/keys explain-data :pred problem](https://dev.clojure.org/jira/browse/CLJ-2177)
+- [[CLJ-2178] s/& explain-data :pred problem](https://dev.clojure.org/jira/browse/CLJ-2178)
 
 ## License
 
