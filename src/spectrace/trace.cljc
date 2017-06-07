@@ -34,6 +34,10 @@
     (succ ret fail)
     (fail)))
 
+(defmethod step* `s/spec [state succ fail]
+  (with-cont succ fail
+    (update state :spec second)))
+
 (defn- choose-spec [specs state succ fail]
   (letfn [(rec [specs]
             (if (empty? specs)
