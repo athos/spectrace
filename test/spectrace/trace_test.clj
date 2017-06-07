@@ -63,15 +63,18 @@
        :in []}
       {:spec `(= (count ~'%) 2) :path [] :val [1 "foo" 3] :in []}]]
 
-    ;; Can't test them until CLJ-2168 will be fixed
-    #_(s/coll-of integer?)
-    #_[1 :a]
-    #_[[{:spec `(s/coll-of integer?) :path [] :val [1 :a] :in [1]}
+    ;; we can omit `s/spec` once CLJ-2168 is fixed
+    (s/coll-of (s/spec integer?))
+    [1 :a]
+    [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val [1 :a] :in [1]}
+      {:spec `(s/spec integer?) :path [] :val :a :in []}
       {:spec `integer? :path [] :val :a :in []}]]
 
-    #_(s/every integer?)
-    #_[1 :a]
-    #_[[{:spec `(s/every integer?) :path [] :val [1 :a] :in [1]}
+    ;; ditto
+    (s/every (s/spec integer?))
+    [1 :a]
+    [[{:spec `(s/every (s/spec integer?)) :path [] :val [1 :a] :in [1]}
+      {:spec `(s/spec integer?) :path [] :val :a :in []}
       {:spec `integer? :path [] :val :a :in []}]]
 
     (s/map-of integer? string?)
