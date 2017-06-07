@@ -89,10 +89,10 @@
 (defn- step-for-every [{:keys [val in] :as state} succ fail]
   (with-cont succ fail
     (let [[key & in] in]
-      (when (and (vector? val) (> (count val) key))
+      (when (and (coll? val) (> (count val) key))
         (-> state
             (update :spec second)
-            (assoc :val (nth val key))
+            (assoc :val (nth (seq val) key))
             (assoc :in in))))))
 
 (defmethod step* `s/every [state succ fail]

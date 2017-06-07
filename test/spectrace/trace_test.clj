@@ -70,10 +70,52 @@
       {:spec `(s/spec integer?) :path [] :val :a :in []}
       {:spec `integer? :path [] :val :a :in []}]]
 
+    (s/coll-of (s/spec (fn [[k v]] (= (str k) v))))
+    {1 :a}
+    [[{:spec `(s/coll-of (s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v))))
+       :path []
+       :val {1 :a}
+       :in [0]}
+      {:spec `(s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v)))
+       :path []
+       :val [1 :a]
+       :in []}
+      {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
+       :path []
+       :val [1 :a]
+       :in []}]]
+
+    (s/coll-of (s/spec integer?))
+    #{1 :a}
+    [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val #{1 :a} :in [1]}
+      {:spec `(s/spec integer?) :path [] :val :a :in []}
+      {:spec `integer? :path [] :val :a :in []}]]
+
     ;; ditto
     (s/every (s/spec integer?))
     [1 :a]
     [[{:spec `(s/every (s/spec integer?)) :path [] :val [1 :a] :in [1]}
+      {:spec `(s/spec integer?) :path [] :val :a :in []}
+      {:spec `integer? :path [] :val :a :in []}]]
+
+    (s/every (s/spec (fn [[k v]] (= (str k) v))))
+    {1 :a}
+    [[{:spec `(s/every (s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v))))
+       :path []
+       :val {1 :a}
+       :in [0]}
+      {:spec `(s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v)))
+       :path []
+       :val [1 :a]
+       :in []}
+      {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
+       :path []
+       :val [1 :a]
+       :in []}]]
+
+    (s/every (s/spec integer?))
+    #{1 :a}
+    [[{:spec `(s/every (s/spec integer?)) :path [] :val #{1 :a} :in [1]}
       {:spec `(s/spec integer?) :path [] :val :a :in []}
       {:spec `integer? :path [] :val :a :in []}]]
 
