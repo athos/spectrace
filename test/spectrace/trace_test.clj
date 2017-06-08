@@ -243,4 +243,12 @@
     [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0]}
       {:spec `integer? :path [] :val :a :in []}]]
 
+    ;; Add this though I'm not sure it's proper usage of s/conformer
+    (s/conformer (constantly ::s/invalid))
+    42
+    [[{:spec `(s/conformer (constantly ::s/invalid))
+       :path []
+       :val 42
+       :in []}]]
+
     ))
