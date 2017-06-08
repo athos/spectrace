@@ -193,6 +193,19 @@
 (defmethod step* `s/+ [state succ fail]
   (step-for-rep state succ fail))
 
+(defmethod step* `s/multi-spec [{:keys [spec path] :as state} succ fail]
+  (with-cont succ fail
+    (let [[segment & path] path
+          multi-name (second spec)
+          maybe-multi (and (symbol? multi-name)
+                           (some-> multi-name resolve))]
+      (when (and (var? maybe-multi)
+                 (instance? clojure.lang.MultiFn @maybe-multi))
+        (let [method (get-method @maybe-multi segment)]
+          (assoc state
+                 :spec (method (:val state))
+                 :path path))))))
+
 (defn- step [{:keys [spec] :as state} succ fail]
   (if (or (set? spec) (symbol? spec) (keyword? spec))
     (succ state fail)

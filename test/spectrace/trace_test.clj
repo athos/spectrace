@@ -7,6 +7,11 @@
 (s/def ::y string?)
 (s/def ::z keyword?)
 
+(s/def ::type keyword?)
+(defmulti m :type)
+(defmethod m :x [_] (s/keys :req-un [::type ::x]))
+(defmethod m :y [_] (s/keys :req-un [::type ::y]))
+
 (deftest traces-test
   (are [spec data expected]
       (= expected (trace/traces (s/explain-data spec data)))
@@ -242,6 +247,18 @@
     [:a]
     [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0]}
       {:spec `integer? :path [] :val :a :in []}]]
+
+    (s/multi-spec m :type)
+    {:type :x}
+    [[{:spec `(s/multi-spec m :type) :path [:x] :val {:type :x} :in []}
+      {:spec `(s/keys :req-un [::type ::x])
+       :path []
+       :val {:type :x}
+       :in []}
+      {:spec `(fn [~'%] (contains? ~'% :x))
+       :path []
+       :val {:type :x}
+       :in []}]]
 
     ;; Add this though I'm not sure it's proper usage of s/conformer
     (s/conformer (constantly ::s/invalid))
