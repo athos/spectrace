@@ -193,6 +193,19 @@
        :in [1]}
       {:spec `string? :path [] :val :b :in []}]]
 
+    (s/cat :int integer? :more (s/cat :int integer? :str string?))
+    [1 2 3]
+    [[{:spec `(s/cat :int integer?
+                     :more (s/cat :int integer? :str string?))
+       :path [:more :str]
+       :val [1 2 3]
+       :in [2]}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 2 3]
+       :in [2]}
+      {:spec `string? :path [] :val 3 :in []}]]
+
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
     [4 :a]
@@ -207,10 +220,10 @@
        :in [1]}
       {:spec `integer? :path [] :val :a :in []}]]
 
-    (s/& (s/cat :x integer? :y integer?)
+    #_(s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
-    [4 3]
-    [[{:spec `(s/& (s/cat :x integer? :y integer?)
+    #_[4 3]
+    #_[[{:spec `(s/& (s/cat :x integer? :y integer?)
                    (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
        :path []
        :val [4 3]
@@ -233,20 +246,69 @@
        :in [0]}
       {:spec `string? :path [] :val :a :in []}]]
 
+    (s/alt :one integer? :two (s/cat :first integer? :second integer?))
+    [1 'foo]
+    [[{:spec `(s/alt :one integer?
+                     :two (s/cat :first integer? :second integer?))
+       :path [:two :second]
+       :val [1 'foo]
+       :in [1]}
+      {:spec `(s/cat :first integer? :second integer?)
+       :path [:second]
+       :val [1 'foo]
+       :in [1]}
+      {:spec `integer? :path [] :val 'foo :in []}]]
+
     (s/? integer?)
     [:a]
     [[{:spec `(s/? integer?) :path [] :val [:a] :in [0]}
       {:spec `integer? :path [] :val :a :in []}]]
+
+    (s/? (s/cat :int integer? :str string?))
+    [1 :a]
+    [[{:spec `(s/? (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 :a]
+       :in [1]}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 :a]
+       :in [1]}
+      {:spec `string? :path [] :val :a :in []}]]
 
     (s/* integer?)
     [1 :a 3]
     [[{:spec `(s/* integer?) :path [] :val [1 :a 3] :in [1]}
       {:spec `integer? :path [] :val :a :in []}]]
 
+    (s/* (s/cat :int integer? :str string?))
+    [1 "foo" 2 :bar]
+    [[{:spec `(s/* (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 "foo" 2 :bar]
+       :in [3]}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 "foo" 2 :bar]
+       :in [3]}
+      {:spec `string? :path [] :val :bar :in []}]]
+
     (s/+ integer?)
     [:a]
     [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0]}
       {:spec `integer? :path [] :val :a :in []}]]
+
+    (s/+ (s/cat :int integer? :str string?))
+    [1 "foo" 2 :bar]
+    [[{:spec `(s/+ (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 "foo" 2 :bar]
+       :in [3]}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 "foo" 2 :bar]
+       :in [3]}
+      {:spec `string? :path [] :val :bar :in []}]]
 
     (s/multi-spec m :type)
     {:type :x}

@@ -50,16 +50,15 @@
   (let [specs (rest (:spec state))]
     (choose-spec specs state succ fail)))
 
-(defn- step-by-key [{:keys [spec path val in]} succ fail & {:keys [val-fn]}]
+(defn- step-forward [{:keys [spec path] :as state} succ fail]
   (with-cont succ fail
-    (let [[segment & path] path, [key & in] in]
+    (let [[segment & path] path]
       (when-let [spec' (some (fn [[tag spec]] (and (= tag segment) spec))
                              (partition 2 (rest spec)))]
-        {:spec spec' :path path :in in
-         :val (cond-> val val-fn (val-fn key))}))))
+        (assoc state :spec spec' :path path)))))
 
 (defmethod step* `s/or [state succ fail]
-  (step-by-key state succ fail))
+  (step-forward state succ fail))
 
 (defmethod step* `s/nilable [{:keys [path] :as state} succ fail]
   (with-cont succ fail
@@ -168,21 +167,31 @@
 (defmethod step* `s/merge [state succ fail]
   (choose-spec (rest (:spec state)) state succ fail))
 
+(def ^:private regex-ops
+  `#{s/cat s/& s/alt s/? s/* s/+})
+
+(defn- regex-succ [succ]
+  (fn [{:keys [spec val in] :as state} fail]
+    (with-cont succ fail
+      (if (and (seq? spec) (contains? regex-ops (first spec)))
+        state
+        (let [[key & in] in]
+          (when (and (seqable? val) (integer? key))
+            (assoc state :val (nth val key) :in in)))))))
+
 (defmethod step* `s/cat [state succ fail]
-  (step-by-key state succ fail :val-fn nth))
+  (step-forward state (regex-succ succ) fail))
 
 (defmethod step* `s/& [state succ fail]
-  (choose-spec (rest (:spec state)) state succ fail))
+  (choose-spec (rest (:spec state)) state (regex-succ succ) fail))
 
 (defmethod step* `s/alt [state succ fail]
-  (step-by-key state succ fail :val-fn nth))
+  (step-forward state (regex-succ succ) fail))
 
 (defn- step-for-rep [{:keys [val in] :as state} succ fail]
-  (let [[key & in] in]
-    (-> state
-        (update :spec second)
-        (assoc :val (nth val key) :in in)
-        (succ fail))))
+  (-> state
+      (update :spec second)
+      ((regex-succ succ) fail)))
 
 (defmethod step* `s/? [state succ fail]
   (step-for-rep state succ fail))
