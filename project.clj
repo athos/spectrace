@@ -3,6 +3,9 @@
   :url "https://github.com/athos/spectrace"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+
+  :test-paths ["test/cljc"]
+
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/clojurescript "1.9.562"]
                  [org.clojure/spec.alpha "0.1.123"]]
