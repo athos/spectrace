@@ -316,6 +316,14 @@
        :in [3]}
       {:spec `string? :path [] :val :bar :in []}]]
 
+    (s/fspec :args (s/cat :n integer?) :ret integer?)
+    str
+    [[{:spec `(s/fspec :args (s/cat :n integer?) :ret integer? :fn nil)
+       :path [:ret]
+       :val str
+       :in []}
+      {:spec `integer? :path [] :val str :in []}]]
+
     (s/multi-spec m :type)
     {:type :x}
     [[{:spec `(s/multi-spec m :type) :path [:x] :val {:type :x} :in []}

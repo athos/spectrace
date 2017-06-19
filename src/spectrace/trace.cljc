@@ -202,6 +202,11 @@
 (defmethod step* `s/+ [state succ fail]
   (step-for-rep state succ fail))
 
+(defmethod step* `s/fspec [{:keys [path pred] :as state} succ fail]
+  (if (empty? path)
+    (succ (assoc state :spec pred) fail)
+    (step-forward state succ fail)))
+
 (defmethod step* `s/multi-spec [{:keys [spec path] :as state} succ fail]
   (with-cont succ fail
     (let [[segment & path] path
