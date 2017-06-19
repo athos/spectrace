@@ -206,6 +206,12 @@
        :in [2]}
       {:spec `string? :path [] :val 3 :in []}]]
 
+    ;; Add this after CLJ-2178 is fixed
+    #_(s/& integer? even?)
+    #_[1]
+    #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0]}
+      {:spec `even? :path [] :val 1 :in []}]]
+
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
     [4 :a]
