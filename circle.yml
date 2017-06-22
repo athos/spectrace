@@ -1,0 +1,7 @@
+machine:
+  timezone: Asia/Tokyo
+
+test:
+  override:
+    # - lein trampoline test-all
+    - lein trampoline test-clj
