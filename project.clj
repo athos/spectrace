@@ -33,6 +33,9 @@
              {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]]
               :plugins [[lein-eftest "0.3.1"]
                         [lein-doo "0.1.7"]]}}
+
+  :eftest {:report eftest.report.pretty/report}
+
   :aliases {"test-clj" ["eftest"]
             "test-cljs" ["do" ["test-cljs-none"] ["test-cljs-min"] ["test-cljs-node"]]
             "test-cljs-none" ["doo" "phantom" "test"]
