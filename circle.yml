@@ -4,4 +4,4 @@ machine:
 test:
   override:
     # - lein trampoline test-all
-    - lein trampoline test-clj
+    - lein trampoline test-all

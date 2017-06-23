@@ -31,7 +31,8 @@
   :eftest {:report eftest.report.pretty/report}
 
   :aliases {"test-clj" ["eftest"]
-            "test-cljs" ["do" ["test-cljs-none"] ["test-cljs-node"]]
+            "test-cljs" ["do" ["test-cljs-none" "once"]
+                              ["test-cljs-node" "once"]]
             "test-cljs-none" ["doo" "phantom" "test"]
             "test-cljs-node" ["doo" "node" "node-test"]
             "test-all" ["do" ["test-clj"] ["test-cljs"]]})
