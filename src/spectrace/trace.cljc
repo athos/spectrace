@@ -1,5 +1,6 @@
 (ns spectrace.trace
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            #?(:cljs [cljs.compiler :as comp])))
 
 #_(do
 
@@ -210,18 +211,28 @@
     (succ (assoc state :spec pred) fail)
     (step-forward state succ fail)))
 
+(defn- method-of [multi-name key]
+  #?(:clj (let [maybe-multi (resolve multi-name)]
+            (when (and (var? maybe-multi)
+                       (instance? clojure.lang.MultiFn @maybe-multi))
+              (get-method @maybe-multi key)))
+     :cljs (let [maybe-multi (try
+                               ;; I'm not sure this is the right way
+                               ;; to resolve a symbol in CLJS
+                               (js/eval (str (comp/munge multi-name)))
+                               (catch js/Error _ nil))]
+             (when (instance? MultiFn maybe-multi)
+               (get-method maybe-multi key)))))
+
 (defmethod step* `s/multi-spec [{:keys [spec path] :as state} succ fail]
   (with-cont succ fail
     (let [[segment & path] path
-          multi-name (second spec)
-          maybe-multi (and (symbol? multi-name)
-                           (some-> multi-name resolve))]
-      (when (and (var? maybe-multi)
-                 (instance? clojure.lang.MultiFn @maybe-multi))
-        (let [method (get-method @maybe-multi segment)]
-          (assoc state
-                 :spec (method (:val state))
-                 :path path))))))
+          multi-name (second spec)]
+      (when-let [method (and (symbol? multi-name)
+                             (method-of multi-name segment))]
+        (assoc state
+               :spec (method (:val state))
+               :path path)))))
 
 (defn- step [{:keys [spec] :as state} succ fail]
   (if (or (set? spec) (symbol? spec) (keyword? spec))
