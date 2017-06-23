@@ -15,12 +15,6 @@
                                    :output-dir "target/out"
                                    :main spectrace.runner
                                    :optimizations :none}}
-                       {:id "min-test"
-                        :source-paths ["src" "test/cljc" "test/cljs"]
-                        :compiler {:output-to "target/min_out/test.js"
-                                   :output-dir "target/min_out"
-                                   :main spectrace.runner
-                                   :optimizations :advanced}}
                        {:id "node-test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
                         :compiler {:output-to "target/node_out/test.js"
@@ -37,8 +31,7 @@
   :eftest {:report eftest.report.pretty/report}
 
   :aliases {"test-clj" ["eftest"]
-            "test-cljs" ["do" ["test-cljs-none"] ["test-cljs-min"] ["test-cljs-node"]]
+            "test-cljs" ["do" ["test-cljs-none"] ["test-cljs-node"]]
             "test-cljs-none" ["doo" "phantom" "test"]
-            "test-cljs-min" ["doo" "phantom" "min-test"]
             "test-cljs-node" ["doo" "node" "node-test"]
             "test-all" ["do" ["test-clj"] ["test-cljs"]]})
