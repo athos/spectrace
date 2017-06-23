@@ -215,19 +215,21 @@
     #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0]}
       {:spec `even? :path [] :val 1 :in []}]]
 
-    (s/& (s/cat :x integer? :y integer?)
-         (fn [{:keys [x y]}] (< x y)))
-    [4 :a]
-    [[{:spec `(s/& (s/cat :x integer? :y integer?)
-                   (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
-       :path [:y]
-       :val [4 :a]
-       :in [1]}
-      {:spec `(s/cat :x integer? :y integer?)
-       :path [:y]
-       :val [4 :a]
-       :in [1]}
-      {:spec `integer? :path [] :val :a :in []}]]
+    #?@(:clj
+        ((s/& (s/cat :x integer? :y integer?)
+              (fn [{:keys [x y]}] (< x y)))
+         [4 :a]
+         [[{:spec `(s/& (s/cat :x integer? :y integer?)
+                        (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
+            :path [:y]
+            :val [4 :a]
+            :in [1]}
+           {:spec `(s/cat :x integer? :y integer?)
+            :path [:y]
+            :val [4 :a]
+            :in [1]}
+           {:spec `integer? :path [] :val :a :in []}]]
+         ))
 
     #_(s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
