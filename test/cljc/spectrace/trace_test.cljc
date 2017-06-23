@@ -1,6 +1,9 @@
 (ns spectrace.trace-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is are]]
+            #?@(:cljs ([clojure.test.check]
+                       [clojure.test.check.generators]
+                       [clojure.test.check.properties]))
             [spectrace.trace :as trace]))
 
 (s/def ::x integer?)
