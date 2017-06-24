@@ -25,7 +25,8 @@
 
   :profiles {:dev
              {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]]
-              :plugins [[lein-eftest "0.3.1"]
+              :plugins [[lein-cloverage "1.0.9"]
+                        [lein-eftest "0.3.1"]
                         [lein-doo "0.1.7"]]}}
 
   :eftest {:report eftest.report.pretty/report}
