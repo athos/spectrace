@@ -20,3 +20,28 @@
   :args (s/cat :state ::state
                :succ  ::succ
                :fail  ::fail))
+
+(s/fdef trace/step
+  :args (s/cat :state ::state
+               :succ  ::succ
+               :fail  ::fail))
+
+(s/def ::problem
+  (s/keys :req-un [::pred ::path ::val ::in]))
+(s/def ::s/spec
+  (s/or :spec s/spec? :regex s/regex? :fn fn? :set set?))
+(s/def ::s/value any?)
+
+(s/fdef trace/trace
+  :args (s/cat :problem ::s/problem
+               :spec  ::s/spec
+               :value ::s/value)
+  :ret (s/coll-of ::state))
+
+(s/def ::s/problems (s/coll-of ::problem))
+(s/def ::explain-data
+  (s/keys :req [::s/spec ::s/value ::s/problems]))
+
+(s/fdef trace/traces
+  :args (s/cat :ed ::explain-data)
+  :ret (s/coll-of (s/coll-of ::state)))
