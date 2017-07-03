@@ -2,10 +2,6 @@
   (:require [clojure.spec.alpha :as s]
             #?(:cljs [cljs.compiler :as comp])))
 
-#_(do
-
-)
-
 (defmulti step* (fn [state succ fail] (first (:spec state))))
 (defmethod step* :default [{:keys [spec]} _ _]
   (throw
