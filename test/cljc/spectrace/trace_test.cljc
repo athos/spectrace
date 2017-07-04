@@ -347,4 +347,16 @@
        :val 42
        :in []}]]
 
+    (s/nonconforming (s/cat :int integer? :str string?))
+    [1 'foo]
+    [[{:spec `(s/nonconforming (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 'foo]
+       :in [1]}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 'foo]
+       :in [1]}
+      {:spec `string? :path [] :val 'foo :in []}]]
+
     ))

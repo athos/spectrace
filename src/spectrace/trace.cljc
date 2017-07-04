@@ -210,6 +210,9 @@
                :spec (method (:val state))
                :path path)))))
 
+(defmethod step* `s/nonconforming [state succ fail]
+  (succ (update state :spec second) fail))
+
 (defn- step [{:keys [spec] :as state} succ fail]
   (if (or (set? spec) (symbol? spec) (keyword? spec))
     (succ state fail)
