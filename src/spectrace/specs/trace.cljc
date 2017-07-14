@@ -13,18 +13,11 @@
   (s/keys :req-un [::spec ::path ::val ::in ::pred]
           :opt-un [::spec-name]))
 
-(s/def ::fail (s/fspec :args (s/cat) :ret any?))
-(s/def ::succ (s/fspec :args (s/cat :state ::state :fail ::fail) :ret any?))
-
 (s/fdef trace/step*
-  :args (s/cat :state ::state
-               :succ  ::succ
-               :fail  ::fail))
+  :args (s/cat :state ::state))
 
 (s/fdef trace/step
-  :args (s/cat :state ::state
-               :succ  ::succ
-               :fail  ::fail))
+  :args (s/cat :state ::state))
 
 (s/def ::problem
   (s/keys :req-un [::pred ::path ::val ::in]))
