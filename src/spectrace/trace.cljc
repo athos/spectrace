@@ -2,6 +2,13 @@
   (:require [clojure.spec.alpha :as s]
             #?(:cljs [cljs.compiler :as comp])))
 
+(def ^:dynamic *eval-fn*
+  #?(:clj eval :cljs nil))
+
+(defn- eval* [x]
+  (assert *eval-fn* "spectrace.trace/*eval-fn* must be bound")
+  (*eval-fn* x))
+
 (defmulti step* (fn [state succ fail] (first (:spec state))))
 (defmethod step* :default [{:keys [spec]} _ _]
   (throw
@@ -18,17 +25,27 @@
   (with-cont succ fail
     (update state :spec second)))
 
-(defn- choose-spec [specs state succ fail]
-  (letfn [(rec [specs]
+(defn- interleave-specs [specs {:keys [val] :as state} succ fail]
+  (letfn [(rec [specs val]
             (if (empty? specs)
               (fail)
-              (succ (assoc state :spec (first specs))
-                    #(rec (rest specs)))))]
-    (rec specs)))
+              (let [[spec & specs] specs
+                    evaled-spec (eval* spec)
+                    conformed (s/conform evaled-spec val)]
+                (if (s/invalid? conformed)
+                  (let [ed (s/explain-data evaled-spec val)
+                        ;;FIXME: should deal with all the problems,
+                        ;; not only first one
+                        {:keys [in path]} (first (::s/problems ed))]
+                    (succ (assoc state
+                                 :spec spec :val val :in in :path path)
+                          fail))
+                  (recur specs conformed)))))]
+    (rec specs val)))
 
 (defmethod step* `s/and [state succ fail]
   (let [specs (rest (:spec state))]
-    (choose-spec specs state succ fail)))
+    (interleave-specs specs state succ fail)))
 
 (defn- step-forward [{:keys [spec path] :as state} succ fail]
   (with-cont succ fail
@@ -144,8 +161,17 @@
             (get keys key))]
     (step-for-keys state succ fail get-key)))
 
-(defmethod step* `s/merge [state succ fail]
-  (choose-spec (rest (:spec state)) state succ fail))
+(defmethod step* `s/merge [{:keys [spec] :as state} succ fail]
+  (letfn [(rec [specs]
+            (if (empty? specs)
+              (fail)
+              (let [[spec & specs] specs]
+                (if (s/invalid? (s/conform (eval* spec) val))
+                  ;;FIXME: should deal with all the problems,
+                  ;; not only the first one
+                  (succ (assoc state :spec spec) fail)
+                  (recur specs)))))]
+    (rec (rest spec))))
 
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
@@ -163,7 +189,7 @@
   (step-forward state (regex-succ succ) fail))
 
 (defmethod step* `s/& [state succ fail]
-  (choose-spec (rest (:spec state)) state (regex-succ succ) fail))
+  (interleave-specs (rest (:spec state)) state succ fail))
 
 (defmethod step* `s/alt [state succ fail]
   (step-forward state (regex-succ succ) fail))
