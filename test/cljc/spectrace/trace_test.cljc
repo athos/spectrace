@@ -267,10 +267,10 @@
        :trails [0]}
       {:spec `integer? :path [] :val :a :in [] :trails [0 :y]}]]
 
-    #_(s/& (s/cat :x integer? :y integer?)
+    (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
-    #_[4 3]
-    #_[[{:spec `(s/& (s/cat :x integer? :y integer?)
+    [4 3]
+    [[{:spec `(s/& (s/cat :x integer? :y integer?)
                    (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
        :path []
        :val [4 3]
@@ -278,8 +278,8 @@
        :trails []}
       {:spec `(fn [{:keys [~'x ~'y]}] (< ~'x ~'y))
        :path []
-       :val [4 3]
-       :in [1]
+       :val {:x 4 :y 3}
+       :in []
        :trails [1]}]]
 
     (s/alt :int integer? :str string?)

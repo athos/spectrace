@@ -9,6 +9,13 @@
   (assert *eval-fn* "spectrace.trace/*eval-fn* must be bound")
   (*eval-fn* x))
 
+(def ^:private ^:dynamic *problem-indexes*)
+
+(defn- next-index [trails]
+  (let [index (get *problem-indexes* trails 0)]
+    (set! *problem-indexes* (assoc *problem-indexes* trails (inc index)))
+    index))
+
 (defmulti step* (fn [state] (first (:spec state))))
 (defmethod step* :default [{:keys [spec]}]
   (throw
@@ -19,19 +26,18 @@
 (defmethod step* `s/spec [state]
   (update state :spec second))
 
-(defn- interleave-specs [specs {:keys [val] :as state}]
+(defn- interleave-specs [specs {:keys [val trails] :as state}]
   (loop [i 0, [spec & specs] specs, val val]
     (assert (not (nil? spec)))
     (let [evaled-spec (eval* spec)
           conformed (s/conform evaled-spec val)]
       (if (s/invalid? conformed)
         (let [ed (s/explain-data evaled-spec val)
-              ;;FIXME: should deal with all the problems,
-              ;; not only first one
-              {:keys [in path]} (first (::s/problems ed))]
-          (-> state
-              (assoc :spec spec :path path :val val :in in)
-              (update :trails conj i)))
+              trails (conj trails i)
+              {:keys [path in]} (nth (::s/problems ed)
+                                     (next-index trails))]
+          (assoc state
+                 :spec spec :path path :val val :in in :trails trails))
         (recur (inc i) specs conformed)))))
 
 (defmethod step* `s/and [state]
@@ -139,14 +145,17 @@
             (get keys key))]
     (step-for-keys state get-key)))
 
-(defmethod step* `s/merge [{:keys [spec] :as state}]
+(defmethod step* `s/merge [{:keys [spec val trails] :as state}]
   (loop [i 0, [spec & specs] (rest spec)]
     (assert (not (nil? spec)))
-    (if (s/invalid? (s/conform (eval* spec) val))
-      ;;FIXME: should deal with all the problems, not only the first one
-      (-> state
-          (assoc :spec spec)
-          (update :trails conj i))
+    (if-let [{:keys [::s/problems]} (s/explain-data (eval* spec) val)]
+      (let [trails (conj trails i)
+            index (next-index trails)]
+        (if (>= index (count problems))
+          (recur (inc i) specs)
+          (let [{:keys [path in]} (nth problems index)]
+            (assoc state
+                   :spec spec :path path :in in :trails trails))))
       (recur (inc i) specs))))
 
 (def ^:private regex-ops
@@ -223,7 +232,7 @@
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))
 
-(defn trace [{:keys [path in val pred] :as problem} spec value]
+(defn- trace [{:keys [path in val pred] :as problem} spec value]
   (let [state (normalize {:spec spec :path path :val value :in in})]
     (loop [{:keys [spec] :as state} state,
            ret [state]]
@@ -233,4 +242,5 @@
           (recur state' (conj ret state')))))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
-  (mapv #(trace % spec value) (::s/problems ed)))
+  (binding [*problem-indexes* {}]
+    (mapv #(trace % spec value) (::s/problems ed))))
