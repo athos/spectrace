@@ -20,7 +20,7 @@
   (update state :spec second))
 
 (defn- interleave-specs [specs {:keys [val] :as state}]
-  (loop [[spec & specs] specs, val val]
+  (loop [i 0, [spec & specs] specs, val val]
     (assert (not (nil? spec)))
     (let [evaled-spec (eval* spec)
           conformed (s/conform evaled-spec val)]
@@ -29,8 +29,10 @@
               ;;FIXME: should deal with all the problems,
               ;; not only first one
               {:keys [in path]} (first (::s/problems ed))]
-          (assoc state :spec spec :val val :in in :path path))
-        (recur specs conformed)))))
+          (-> state
+              (assoc :spec spec :path path :val val :in in)
+              (update :trails conj i)))
+        (recur (inc i) specs conformed)))))
 
 (defmethod step* `s/and [state]
   (interleave-specs (rest (:spec state)) state))
@@ -39,7 +41,9 @@
   (let [[segment & path] path]
     (let [spec' (some (fn [[tag spec]] (and (= tag segment) spec))
                       (partition 2 (rest spec)))]
-      (assoc state :spec spec' :path path))))
+      (-> state
+          (assoc :spec spec' :path path)
+          (update :trails conj segment)))))
 
 (defmethod step* `s/or [state]
   (step-forward state))
@@ -64,7 +68,8 @@
           (assoc :spec (nth (rest spec) segment)
                  :path path
                  :val (nth val key)
-                 :in in)))))
+                 :in in)
+          (update :trails conj segment)))))
 
 (defn- step-for-every [{:keys [val in] :as state}]
   (let [[key & in] in]
@@ -84,10 +89,10 @@
         [key1 key2 & in] in
         pred-key (get #{0 1} segment)
         specs (take 2 (rest spec))]
-    {:spec (nth specs pred-key)
-     :path path
-     :val (-> val (find key1) (nth key2))
-     :in in}))
+    (-> state
+        (assoc :spec (nth specs pred-key) :path path
+               :val (-> val (find key1) (nth key2)) :in in)
+        (update :trails conj key2))))
 
 (defmethod step* `s/map-of [state]
   (step-for-every-kv state))
@@ -120,10 +125,10 @@
         (assoc state :spec pred))
       (let [[segment & path] path
             [key & in] (:in state)]
-        {:spec (get keys segment)
-         :path path
-         :val (cond-> val val-fn (val-fn key))
-         :in in}))))
+        (-> state
+            (assoc :spec (get keys segment) :path path
+                   :val (cond-> val val-fn (val-fn key)) :in in)
+            (update :trails conj segment))))))
 
 (defmethod step* `s/keys [state]
   (step-for-keys state :val-fn get))
@@ -135,12 +140,14 @@
     (step-for-keys state get-key)))
 
 (defmethod step* `s/merge [{:keys [spec] :as state}]
-  (loop [[spec & specs] (rest spec)]
+  (loop [i 0, [spec & specs] (rest spec)]
     (assert (not (nil? spec)))
     (if (s/invalid? (s/conform (eval* spec) val))
       ;;FIXME: should deal with all the problems, not only the first one
-      (assoc state :spec spec)
-      (recur specs))))
+      (-> state
+          (assoc :spec spec)
+          (update :trails conj i))
+      (recur (inc i) specs))))
 
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
@@ -191,9 +198,9 @@
   (let [[segment & path] path
         multi-name (second spec)]
     (let [method (method-of multi-name segment)]
-      (assoc state
-             :spec (method (:val state))
-             :path path))))
+      (-> state
+          (assoc :spec (method (:val state)) :path path)
+          (update :trails conj segment)))))
 
 (defmethod step* `s/nonconforming [state]
   (update state :spec second))
@@ -203,14 +210,15 @@
     state
     (step* state)))
 
-(defn- normalize [{:keys [spec path val in]}]
+(defn- normalize [{:keys [spec path val in trails]}]
   (let [spec' (if (or (keyword? spec) (s/spec? spec) (s/regex? spec))
                 (s/form spec)
                 spec)
         state {:spec spec'
                :path (vec path)
                :val val
-               :in (vec in)}]
+               :in (vec in)
+               :trails (vec trails)}]
     (if (keyword? spec)
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))

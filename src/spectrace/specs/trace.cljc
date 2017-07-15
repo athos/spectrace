@@ -3,21 +3,24 @@
             [spectrace.trace :as trace]))
 
 (s/def ::spec any?)
-(s/def ::path (s/coll-of (s/or :keyword keyword? :int integer?)))
+(s/def ::path (s/coll-of any?))
 (s/def ::val any?)
-(s/def ::in (s/coll-of (s/or :keyword keyword? :int integer?)))
+(s/def ::in (s/coll-of any?))
 (s/def ::pred any?)
 (s/def ::spec-name keyword?)
+(s/def ::trails (s/coll-of any?))
 
 (s/def ::state
-  (s/keys :req-un [::spec ::path ::val ::in ::pred]
+  (s/keys :req-un [::spec ::path ::val ::in ::trails]
           :opt-un [::spec-name]))
 
 (s/fdef trace/step*
-  :args (s/cat :state ::state))
+  :args (s/cat :state ::state)
+  :ret ::state)
 
 (s/fdef trace/step
-  :args (s/cat :state ::state))
+  :args (s/cat :state ::state)
+  :ret ::state)
 
 (s/def ::problem
   (s/keys :req-un [::pred ::path ::val ::in]))
