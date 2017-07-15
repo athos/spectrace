@@ -36,4 +36,4 @@
                               ["test-cljs-node" "once"]]
             "test-cljs-none" ["doo" "phantom" "test"]
             "test-cljs-node" ["doo" "node" "node-test"]
-            "test-all" ["do" ["test-clj"] ["test-cljs"]]})
+            "test-all" ["do" ["test-clj"] #_["test-cljs"]]})
