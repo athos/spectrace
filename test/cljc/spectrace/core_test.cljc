@@ -1,10 +1,10 @@
-(ns spectrace.trace-test
+(ns spectrace.core-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is are]]
             #?@(:cljs ([clojure.test.check]
                        [clojure.test.check.generators]
                        [clojure.test.check.properties]))
-            [spectrace.trace :as trace]))
+            [spectrace.core :as strace]))
 
 (s/def ::x integer?)
 (s/def ::y string?)
@@ -17,7 +17,7 @@
 
 (deftest traces-test
   (are [spec data expected]
-      (= expected (trace/traces (s/explain-data spec data)))
+      (= expected (strace/traces (s/explain-data spec data)))
 
     (s/spec integer?)
     :a

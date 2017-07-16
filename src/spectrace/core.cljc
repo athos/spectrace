@@ -1,4 +1,4 @@
-(ns spectrace.trace
+(ns spectrace.core
   (:require [clojure.spec.alpha :as s]
             #?(:cljs [cljs.compiler :as comp])))
 
@@ -6,7 +6,7 @@
   #?(:clj eval :cljs nil))
 
 (defn- eval* [x]
-  (assert *eval-fn* "spectrace.trace/*eval-fn* must be bound")
+  (assert *eval-fn* "spectrace.core/*eval-fn* must be bound")
   (*eval-fn* x))
 
 (def ^:private ^:dynamic *problem-indexes*)
@@ -21,7 +21,7 @@
 (defmethod step* :default [{:keys [spec]}]
   (throw
     (ex-info (str "spec macro " spec
-                  " must have its own method implementation for spectrace.trace/step*")
+                  " must have its own method implementation for spectrace.core/step*")
              {:spec spec})))
 
 (defmethod step* `s/spec [state]

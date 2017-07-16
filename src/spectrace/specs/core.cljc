@@ -1,6 +1,6 @@
-(ns spectrace.specs.trace
+(ns spectrace.specs.core
   (:require [clojure.spec.alpha :as s]
-            [spectrace.trace :as trace]))
+            [spectrace.core :as strace]))
 
 (s/def ::spec any?)
 (s/def ::path (s/coll-of any?))
@@ -14,11 +14,11 @@
   (s/keys :req-un [::spec ::path ::val ::in ::trails]
           :opt-un [::spec-name]))
 
-(s/fdef trace/step*
+(s/fdef strace/step*
   :args (s/cat :state ::state)
   :ret ::state)
 
-(s/fdef trace/step
+(s/fdef strace/step
   :args (s/cat :state ::state)
   :ret ::state)
 
@@ -28,7 +28,7 @@
   (s/or :spec s/spec? :regex s/regex? :fn fn? :set set?))
 (s/def ::s/value any?)
 
-(s/fdef trace/trace
+(s/fdef strace/trace
   :args (s/cat :problem ::s/problem
                :spec  ::s/spec
                :value ::s/value)
@@ -38,6 +38,6 @@
 (s/def ::explain-data
   (s/keys :req [::s/spec ::s/value ::s/problems]))
 
-(s/fdef trace/traces
+(s/fdef strace/traces
   :args (s/cat :ed ::explain-data)
   :ret (s/coll-of (s/coll-of ::state)))
