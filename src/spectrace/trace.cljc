@@ -11,10 +11,11 @@
 
 (def ^:private ^:dynamic *problem-indexes*)
 
-(defn- next-index [trail]
+(defn- next-problem [{:keys [::s/problems]} trail]
   (let [index (get *problem-indexes* trail 0)]
-    (set! *problem-indexes* (assoc *problem-indexes* trail (inc index)))
-    index))
+    (when (< index (count problems))
+      (set! *problem-indexes* (assoc *problem-indexes* trail (inc index)))
+      (nth problems index))))
 
 (defmulti step* (fn [state] (first (:spec state))))
 (defmethod step* :default [{:keys [spec]}]
@@ -34,8 +35,7 @@
       (if (s/invalid? conformed)
         (let [ed (s/explain-data evaled-spec val)
               trail (conj trail i)
-              {:keys [path in]} (nth (::s/problems ed)
-                                     (next-index trail))]
+              {:keys [path in]} (next-problem ed trail)]
           (assoc state
                  :spec spec :path path :val val :in in :trail trail))
         (recur (inc i) specs conformed)))))
@@ -148,14 +148,11 @@
 (defmethod step* `s/merge [{:keys [spec val trail] :as state}]
   (loop [i 0, [spec & specs] (rest spec)]
     (assert (not (nil? spec)))
-    (if-let [{:keys [::s/problems]} (s/explain-data (eval* spec) val)]
-      (let [trail (conj trail i)
-            index (next-index trail)]
-        (if (>= index (count problems))
-          (recur (inc i) specs)
-          (let [{:keys [path in]} (nth problems index)]
-            (assoc state
-                   :spec spec :path path :in in :trail trail))))
+    (if-let [ed (s/explain-data (eval* spec) val)]
+      (let [trail (conj trail i)]
+        (if-let [{:keys [path in]} (next-problem ed trail)]
+          (assoc state :spec spec :path path :in in :trail trail)
+          (recur (inc i) specs)))
       (recur (inc i) specs))))
 
 (def ^:private regex-ops
