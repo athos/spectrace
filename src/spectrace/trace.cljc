@@ -11,9 +11,9 @@
 
 (def ^:private ^:dynamic *problem-indexes*)
 
-(defn- next-index [trails]
-  (let [index (get *problem-indexes* trails 0)]
-    (set! *problem-indexes* (assoc *problem-indexes* trails (inc index)))
+(defn- next-index [trail]
+  (let [index (get *problem-indexes* trail 0)]
+    (set! *problem-indexes* (assoc *problem-indexes* trail (inc index)))
     index))
 
 (defmulti step* (fn [state] (first (:spec state))))
@@ -26,18 +26,18 @@
 (defmethod step* `s/spec [state]
   (update state :spec second))
 
-(defn- interleave-specs [specs {:keys [val trails] :as state}]
+(defn- interleave-specs [specs {:keys [val trail] :as state}]
   (loop [i 0, [spec & specs] specs, val val]
     (assert (not (nil? spec)))
     (let [evaled-spec (eval* spec)
           conformed (s/conform evaled-spec val)]
       (if (s/invalid? conformed)
         (let [ed (s/explain-data evaled-spec val)
-              trails (conj trails i)
+              trail (conj trail i)
               {:keys [path in]} (nth (::s/problems ed)
-                                     (next-index trails))]
+                                     (next-index trail))]
           (assoc state
-                 :spec spec :path path :val val :in in :trails trails))
+                 :spec spec :path path :val val :in in :trail trail))
         (recur (inc i) specs conformed)))))
 
 (defmethod step* `s/and [state]
@@ -49,7 +49,7 @@
                       (partition 2 (rest spec)))]
       (-> state
           (assoc :spec spec' :path path)
-          (update :trails conj segment)))))
+          (update :trail conj segment)))))
 
 (defmethod step* `s/or [state]
   (step-forward state))
@@ -75,7 +75,7 @@
                  :path path
                  :val (nth val key)
                  :in in)
-          (update :trails conj segment)))))
+          (update :trail conj segment)))))
 
 (defn- step-for-every [{:keys [val in] :as state}]
   (let [[key & in] in]
@@ -98,7 +98,7 @@
     (-> state
         (assoc :spec (nth specs pred-key) :path path
                :val (-> val (find key1) (nth key2)) :in in)
-        (update :trails conj key2))))
+        (update :trail conj key2))))
 
 (defmethod step* `s/map-of [state]
   (step-for-every-kv state))
@@ -134,7 +134,7 @@
         (-> state
             (assoc :spec (get keys segment) :path path
                    :val (cond-> val val-fn (val-fn key)) :in in)
-            (update :trails conj segment))))))
+            (update :trail conj segment))))))
 
 (defmethod step* `s/keys [state]
   (step-for-keys state :val-fn get))
@@ -145,17 +145,17 @@
             (get keys key))]
     (step-for-keys state get-key)))
 
-(defmethod step* `s/merge [{:keys [spec val trails] :as state}]
+(defmethod step* `s/merge [{:keys [spec val trail] :as state}]
   (loop [i 0, [spec & specs] (rest spec)]
     (assert (not (nil? spec)))
     (if-let [{:keys [::s/problems]} (s/explain-data (eval* spec) val)]
-      (let [trails (conj trails i)
-            index (next-index trails)]
+      (let [trail (conj trail i)
+            index (next-index trail)]
         (if (>= index (count problems))
           (recur (inc i) specs)
           (let [{:keys [path in]} (nth problems index)]
             (assoc state
-                   :spec spec :path path :in in :trails trails))))
+                   :spec spec :path path :in in :trail trail))))
       (recur (inc i) specs))))
 
 (def ^:private regex-ops
@@ -209,7 +209,7 @@
     (let [method (method-of multi-name segment)]
       (-> state
           (assoc :spec (method (:val state)) :path path)
-          (update :trails conj segment)))))
+          (update :trail conj segment)))))
 
 (defmethod step* `s/nonconforming [state]
   (update state :spec second))
@@ -219,7 +219,7 @@
     state
     (step* state)))
 
-(defn- normalize [{:keys [spec path val in trails]}]
+(defn- normalize [{:keys [spec path val in trail]}]
   (let [spec' (if (or (keyword? spec) (s/spec? spec) (s/regex? spec))
                 (s/form spec)
                 spec)
@@ -227,7 +227,7 @@
                :path (vec path)
                :val val
                :in (vec in)
-               :trails (vec trails)}]
+               :trail (vec trail)}]
     (if (keyword? spec)
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))

@@ -21,17 +21,17 @@
 
     (s/spec integer?)
     :a
-    [[{:spec `integer? :path [] :val :a :in [] :trails []}]]
+    [[{:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     ::x
     :a
-    [[{:spec `integer? :path [] :val :a :in [] :trails []
+    [[{:spec `integer? :path [] :val :a :in [] :trail []
        :spec-name ::x}]]
 
     (s/and integer? even?)
     3
-    [[{:spec `(s/and integer? even?) :path [] :val 3 :in [] :trails []}
-      {:spec `even? :path [] :val 3 :in [] :trails [1]}]]
+    [[{:spec `(s/and integer? even?) :path [] :val 3 :in [] :trail []}
+      {:spec `even? :path [] :val 3 :in [] :trail [1]}]]
 
     (s/or :int integer? :str string?)
     :a
@@ -39,34 +39,34 @@
        :path [:int]
        :val :a
        :in []
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails [:int]}]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [:int]}]
      [{:spec `(s/or :int integer? :str string?)
        :path [:str]
        :val :a
        :in []
-       :trails []}
-      {:spec `string? :path [] :val :a :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :a :in [] :trail [:str]}]]
 
     (s/nilable integer?)
     :a
     [[{:spec `(s/nilable integer?) :path [::s/pred] :val :a :in []
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]
      [{:spec `(s/nilable integer?) :path [::s/nil] :val :a :in []
-       :trails []}
-      {:spec 'nil? :path [] :val :a :in [] :trails []}]]
+       :trail []}
+      {:spec 'nil? :path [] :val :a :in [] :trail []}]]
 
     (s/tuple integer? string?)
     [1 :a]
     [[{:spec `(s/tuple integer? string?) :path [1] :val [1 :a] :in [1]
-       :trails []}
-      {:spec `string? :path [] :val :a :in [] :trails [1]}]]
+       :trail []}
+      {:spec `string? :path [] :val :a :in [] :trail [1]}]]
 
     (s/tuple integer?)
     {}
-    [[{:spec `(s/tuple integer?) :path [] :val {} :in [] :trails []}
-      {:spec 'vector? :path [] :val {} :in [] :trails []}]]
+    [[{:spec `(s/tuple integer?) :path [] :val {} :in [] :trail []}
+      {:spec 'vector? :path [] :val {} :in [] :trail []}]]
 
     (s/tuple integer? string?)
     [1 "foo" 3]
@@ -74,17 +74,17 @@
        :path []
        :val [1 "foo" 3]
        :in []
-       :trails []}
+       :trail []}
       {:spec `(= (count ~'%) 2) :path [] :val [1 "foo" 3] :in []
-       :trails []}]]
+       :trail []}]]
 
     ;; we can omit `s/spec` once CLJ-2168 is fixed
     (s/coll-of (s/spec integer?))
     [1 :a]
     [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val [1 :a] :in [1]
-       :trails []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+       :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/coll-of (s/spec (fn [[k v]] (= (str k) v))))
     {1 :a}
@@ -92,32 +92,32 @@
        :path []
        :val {1 :a}
        :in [0]
-       :trails []}
+       :trail []}
       {:spec `(s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v)))
        :path []
        :val [1 :a]
        :in []
-       :trails []}
+       :trail []}
       {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
        :path []
        :val [1 :a]
        :in []
-       :trails []}]]
+       :trail []}]]
 
     (s/coll-of (s/spec integer?))
     #{1 :a}
     [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val #{1 :a} :in [1]
-       :trails []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+       :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     ;; ditto
     (s/every (s/spec integer?))
     [1 :a]
     [[{:spec `(s/every (s/spec integer?)) :path [] :val [1 :a] :in [1]
-       :trails []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+       :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/every (s/spec (fn [[k v]] (= (str k) v))))
     {1 :a}
@@ -125,24 +125,24 @@
        :path []
        :val {1 :a}
        :in [0]
-       :trails []}
+       :trail []}
       {:spec `(s/spec (fn [[~'k ~'v]] (= (str ~'k) ~'v)))
        :path []
        :val [1 :a]
        :in []
-       :trails []}
+       :trail []}
       {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
        :path []
        :val [1 :a]
        :in []
-       :trails []}]]
+       :trail []}]]
 
     (s/every (s/spec integer?))
     #{1 :a}
     [[{:spec `(s/every (s/spec integer?)) :path [] :val #{1 :a} :in [1]
-       :trails []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+       :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/map-of integer? string?)
     {:a :b}
@@ -150,14 +150,14 @@
        :path [0]
        :val {:a :b}
        :in [:a 0]
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails [0]}]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [0]}]
      [{:spec `(s/map-of integer? string?)
        :path [1]
        :val {:a :b}
        :in [:a 1]
-       :trails []}
-      {:spec `string? :path [] :val :b :in [] :trails [1]}]]
+       :trail []}
+      {:spec `string? :path [] :val :b :in [] :trail [1]}]]
 
     (s/every-kv integer? string?)
     {:a :b}
@@ -165,31 +165,31 @@
        :path [0]
        :val {:a :b}
        :in [:a 0]
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails [0]}]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [0]}]
      [{:spec `(s/every-kv integer? string?)
        :path [1]
        :val {:a :b}
        :in [:a 1]
-       :trails []}
-      {:spec `string? :path [] :val :b :in [] :trails [1]}]]
+       :trail []}
+      {:spec `string? :path [] :val :b :in [] :trail [1]}]]
 
     (s/keys :req-un [::x ::y])
     {}
     [[{:spec `(s/keys :req-un [::x ::y]) :path [] :val {} :in []
-       :trails []}
+       :trail []}
       {:spec `(fn [~'%] (contains? ~'% :x)) :path [] :val {} :in []
-       :trails []}]
+       :trail []}]
      [{:spec `(s/keys :req-un [::x ::y]) :path [] :val {} :in []
-       :trails []}
+       :trail []}
       {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {} :in []
-       :trails []}]]
+       :trail []}]]
 
     (s/keys :opt-un [::x])
     {:x :a}
     [[{:spec `(s/keys :opt-un [::x]) :path [:x] :val {:x :a} :in [:x]
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails [:x] :spec-name ::x}]]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [:x] :spec-name ::x}]]
 
     (s/keys :req [(or ::x (and ::y ::z))])
     {::y "foo" ::z 42}
@@ -197,8 +197,8 @@
        :path [::z]
        :val {::y "foo" ::z 42}
        :in [::z]
-       :trails []}
-      {:spec `keyword? :path [] :val 42 :in [] :trails [::z] :spec-name ::z}]]
+       :trail []}
+      {:spec `keyword? :path [] :val 42 :in [] :trail [::z] :spec-name ::z}]]
 
     (s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
     {:x :a}
@@ -206,20 +206,20 @@
        :path [:x]
        :val {:x :a}
        :in [:x]
-       :trails []}
+       :trail []}
       {:spec `(s/keys :req-un [::x]) :path [:x] :val {:x :a} :in [:x]
-       :trails [0]}
+       :trail [0]}
       {:spec `integer? :path [] :val :a :in [] :spec-name ::x
-       :trails [0 :x]}]
+       :trail [0 :x]}]
      [{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
        :path []
        :val {:x :a}
        :in []
-       :trails []}
+       :trail []}
       {:spec `(s/keys :req-un [::y]) :path [] :val {:x :a} :in []
-       :trails [1]}
+       :trail [1]}
       {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {:x :a} :in []
-       :trails [1]}]]
+       :trail [1]}]]
 
     (s/cat :int integer? :str string?)
     [1 :b]
@@ -227,8 +227,8 @@
        :path [:str]
        :val [1 :b]
        :in [1]
-       :trails []}
-      {:spec `string? :path [] :val :b :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :b :in [] :trail [:str]}]]
 
     (s/cat :int integer? :more (s/cat :int integer? :str string?))
     [1 2 3]
@@ -237,19 +237,19 @@
        :path [:more :str]
        :val [1 2 3]
        :in [2]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :int integer? :str string?)
        :path [:str]
        :val [1 2 3]
        :in [2]
-       :trails [:more]}
-      {:spec `string? :path [] :val 3 :in [] :trails [:more :str]}]]
+       :trail [:more]}
+      {:spec `string? :path [] :val 3 :in [] :trail [:more :str]}]]
 
     ;; Add this after CLJ-2178 is fixed
     #_(s/& integer? even?)
     #_[1]
-    #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0] :trails []}
-      {:spec `even? :path [] :val 1 :in [] :trails [1]}]]
+    #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0] :trail []}
+      {:spec `even? :path [] :val 1 :in [] :trail [1]}]]
 
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
@@ -259,13 +259,13 @@
        :path [:y]
        :val [4 :a]
        :in [1]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :x integer? :y integer?)
        :path [:y]
        :val [4 :a]
        :in [1]
-       :trails [0]}
-      {:spec `integer? :path [] :val :a :in [] :trails [0 :y]}]]
+       :trail [0]}
+      {:spec `integer? :path [] :val :a :in [] :trail [0 :y]}]]
 
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
@@ -275,12 +275,12 @@
        :path []
        :val [4 3]
        :in [1]
-       :trails []}
+       :trail []}
       {:spec `(fn [{:keys [~'x ~'y]}] (< ~'x ~'y))
        :path []
        :val {:x 4 :y 3}
        :in []
-       :trails [1]}]]
+       :trail [1]}]]
 
     (s/alt :int integer? :str string?)
     [:a]
@@ -288,14 +288,14 @@
        :path [:int]
        :val [:a]
        :in [0]
-       :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails [:int]}]
+       :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [:int]}]
      [{:spec `(s/alt :int integer? :str string?)
        :path [:str]
        :val [:a]
        :in [0]
-       :trails []}
-      {:spec `string? :path [] :val :a :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :a :in [] :trail [:str]}]]
 
     (s/alt :one integer? :two (s/cat :first integer? :second integer?))
     [1 'foo]
@@ -304,18 +304,18 @@
        :path [:two :second]
        :val [1 'foo]
        :in [1]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :first integer? :second integer?)
        :path [:second]
        :val [1 'foo]
        :in [1]
-       :trails [:two]}
-      {:spec `integer? :path [] :val 'foo :in [] :trails [:two :second]}]]
+       :trail [:two]}
+      {:spec `integer? :path [] :val 'foo :in [] :trail [:two :second]}]]
 
     (s/? integer?)
     [:a]
-    [[{:spec `(s/? integer?) :path [] :val [:a] :in [0] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+    [[{:spec `(s/? integer?) :path [] :val [:a] :in [0] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/? (s/cat :int integer? :str string?))
     [1 :a]
@@ -323,18 +323,18 @@
        :path [:str]
        :val [1 :a]
        :in [1]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :int integer? :str string?)
        :path [:str]
        :val [1 :a]
        :in [1]
-       :trails []}
-      {:spec `string? :path [] :val :a :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :a :in [] :trail [:str]}]]
 
     (s/* integer?)
     [1 :a 3]
-    [[{:spec `(s/* integer?) :path [] :val [1 :a 3] :in [1] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+    [[{:spec `(s/* integer?) :path [] :val [1 :a 3] :in [1] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/* (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
@@ -342,18 +342,18 @@
        :path [:str]
        :val [1 "foo" 2 :bar]
        :in [3]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :int integer? :str string?)
        :path [:str]
        :val [1 "foo" 2 :bar]
        :in [3]
-       :trails []}
-      {:spec `string? :path [] :val :bar :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :bar :in [] :trail [:str]}]]
 
     (s/+ integer?)
     [:a]
-    [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0] :trails []}
-      {:spec `integer? :path [] :val :a :in [] :trails []}]]
+    [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/+ (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
@@ -361,13 +361,13 @@
        :path [:str]
        :val [1 "foo" 2 :bar]
        :in [3]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :int integer? :str string?)
        :path [:str]
        :val [1 "foo" 2 :bar]
        :in [3]
-       :trails []}
-      {:spec `string? :path [] :val :bar :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val :bar :in [] :trail [:str]}]]
 
     (s/fspec :args (s/cat :n integer?) :ret integer?)
     str
@@ -375,23 +375,23 @@
        :path [:ret]
        :val str
        :in []
-       :trails []}
-      {:spec `integer? :path [] :val str :in [] :trails [:ret]}]]
+       :trail []}
+      {:spec `integer? :path [] :val str :in [] :trail [:ret]}]]
 
     (s/multi-spec m :type)
     {:type :x}
     [[{:spec `(s/multi-spec m :type) :path [:x] :val {:type :x} :in []
-       :trails []}
+       :trail []}
       {:spec `(s/keys :req-un [::type ::x])
        :path []
        :val {:type :x}
        :in []
-       :trails [:x]}
+       :trail [:x]}
       {:spec `(fn [~'%] (contains? ~'% :x))
        :path []
        :val {:type :x}
        :in []
-       :trails [:x]}]]
+       :trail [:x]}]]
 
     ;; Add this though I'm not sure it's proper usage of s/conformer
     (s/conformer (constantly ::s/invalid))
@@ -400,7 +400,7 @@
        :path []
        :val 42
        :in []
-       :trails []}]]
+       :trail []}]]
 
     (s/nonconforming (s/cat :int integer? :str string?))
     [1 'foo]
@@ -408,12 +408,12 @@
        :path [:str]
        :val [1 'foo]
        :in [1]
-       :trails []}
+       :trail []}
       {:spec `(s/cat :int integer? :str string?)
        :path [:str]
        :val [1 'foo]
        :in [1]
-       :trails []}
-      {:spec `string? :path [] :val 'foo :in [] :trails [:str]}]]
+       :trail []}
+      {:spec `string? :path [] :val 'foo :in [] :trail [:str]}]]
 
     ))
