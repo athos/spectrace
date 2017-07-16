@@ -237,6 +237,15 @@
        :spec-name ::y}]]
 
     (s/cat :int integer? :str string?)
+    [1]
+    [[{:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1]
+       :in []
+       :trail []}
+      {:spec `string? :path [] :val [1] :in [] :trail [:str]}]]
+
+    (s/cat :int integer? :str string?)
     [1 :b]
     [[{:spec `(s/cat :int integer? :str string?)
        :path [:str]

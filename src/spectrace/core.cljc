@@ -159,7 +159,8 @@
   `#{s/cat s/& s/alt s/? s/* s/+})
 
 (defn- regex-postprocess [{:keys [spec val in] :as state}]
-  (if (and (seq? spec) (contains? regex-ops (first spec)))
+  (if (or (and (seq? spec) (contains? regex-ops (first spec)))
+          (empty? in))
     state
     (let [[key & in] in]
       (assoc state :val (nth val key) :in in))))
