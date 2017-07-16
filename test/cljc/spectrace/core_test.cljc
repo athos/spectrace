@@ -221,6 +221,21 @@
       {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {:x :a} :in []
        :trail [1]}]]
 
+    (s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+    {:x 1 :y 'foo}
+    [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path [:y]
+       :val {:x 1 :y 'foo}
+       :in [:y]
+       :trail []}
+      {:spec `(s/keys :req-un [::y])
+       :path [:y]
+       :val {:x 1 :y 'foo}
+       :in [:y]
+       :trail [1]}
+      {:spec `string? :path [] :val 'foo :in [] :trail [1 :y]
+       :spec-name ::y}]]
+
     (s/cat :int integer? :str string?)
     [1 :b]
     [[{:spec `(s/cat :int integer? :str string?)
