@@ -5,13 +5,13 @@
 
 clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors
 
-## Install
+## Installation
 
 Add the following to your `:dependencies`:
 
 [![Clojars Project](https://clojars.org/spectrace/latest-version.svg)](http://clojars.org/spectrace)
 
-## Usage
+## Why and how to use it?
 
 In clojure.spec (spec.alpha), `s/explain-data` reports how spec conformance eventually failed, as follows:
 
@@ -34,33 +34,53 @@ user=> ed
                        :val {:x :a}, :via [:user/m], :in []}), :spec :user/m, :value {:x :a}}
 ```
 
-Although this might be useful enough as it is to make simple error messages, it's not sufficient in some cases.
+Although this might be useful enough as it is to make simple error messages, it's not sufficient in some cases due to the difficulty of extracting more useful information from it.
 
 *spectrace* will help us in such a situation:
 
 ```clj
-user=> (require '[spectrace.trace :as trace])
+user=> (require '[spectrace.core :as strace])
 nil
-user=> (trace/traces ed)
-[[{:spec (clojure.spec.alpha/merge
-          (clojure.spec.alpha/keys :req-un [:user/x])
-          (clojure.spec.alpha/keys :req-un [:user/y])),
-   :path [:x], :val {:x :a}, :in [:x], :spec-name :user/m}
+user=> (strace/traces ed)
+[[{:spec
+   (clojure.spec.alpha/merge
+     (clojure.spec.alpha/keys :req-un [:user/x])
+     (clojure.spec.alpha/keys :req-un [:user/y])),
+   :path [:x],
+   :val {:x :a},
+   :in [:x]
+   :trail [],
+   :spec-name :user/m}
   {:spec (clojure.spec.alpha/keys :req-un [:user/x]),
-   :path [:x], :val {:x :a}, :in [:x]}
-  {:spec clojure.core/integer?, :path [], :val :a, :in [], :spec-name :user/x}]
- [{:spec (clojure.spec.alpha/merge
-          (clojure.spec.alpha/keys :req-un [:user/x])
-          (clojure.spec.alpha/keys :req-un [:user/y])),
-   :path [], :val {:x :a}, :in [], :spec-name :user/m}
+   :path [:x],
+   :val {:x :a},
+   :in [:x],
+   :trail [0]}
+  {:spec clojure.core/integer?, :path [], :val :a, :in [], :trail [0 :x], :spec-name :user/x}]
+ [{:spec
+   (clojure.spec.alpha/merge
+     (clojure.spec.alpha/keys :req-un [:user/x])
+     (clojure.spec.alpha/keys :req-un [:user/y])),
+   :path [],
+   :val {:x :a},
+   :in [],
+   :trail [],
+   :spec-name :user/m}
   {:spec (clojure.spec.alpha/keys :req-un [:user/y]),
-   :path [], :val {:x :a}, :in []}
+   :path [],
+   :val {:x :a},
+   :in [],
+   :trail [1]}
   {:spec (clojure.core/fn [%] (clojure.core/contains? % :y)),
-   :path [], :val {:x :a}, :in []}]]                                                            
+   :path [],
+   :val {:x :a},
+   :in [],
+   :trail [1]}]]
 user=> 
 ```
 
 It traces and enumerates all the specs involved in the spec error and makes it easy to build more structured error messages.
+For example, [_Pinpointer_](https://github.com/athos/Pinpointer), a pretty-printing reporter for spec errors, is using spectrace to achieve its high quality error reporting.
 
 ## Issues to be addressed
 
