@@ -14,10 +14,6 @@
   (s/keys :req-un [::spec ::path ::val ::in ::trails]
           :opt-un [::spec-name]))
 
-(s/fdef strace/step*
-  :args (s/cat :state ::state)
-  :ret ::state)
-
 (s/fdef strace/step
   :args (s/cat :state ::state)
   :ret ::state)
