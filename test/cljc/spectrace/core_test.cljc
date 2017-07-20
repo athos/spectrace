@@ -80,6 +80,12 @@
 
     ;; we can omit `s/spec` once CLJ-2168 is fixed
     (s/coll-of (s/spec integer?))
+    1
+    [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val 1 :in []
+       :trail []}
+      {:spec `coll? :path [] :val 1 :in [] :trail []}]]
+
+    (s/coll-of (s/spec integer?))
     [1 :a]
     [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val [1 :a] :in [1]
        :trail []}
@@ -113,6 +119,11 @@
 
     ;; ditto
     (s/every (s/spec integer?))
+    1
+    [[{:spec `(s/every (s/spec integer?)) :path [] :val 1 :in [] :trail []}
+      {:spec `coll? :path [] :val 1 :in [] :trail []}]]
+
+    (s/every (s/spec integer?))
     [1 :a]
     [[{:spec `(s/every (s/spec integer?)) :path [] :val [1 :a] :in [1]
        :trail []}
@@ -145,6 +156,11 @@
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/map-of integer? string?)
+    1
+    [[{:spec `(s/map-of integer? string?) :path [] :val 1 :in [] :trail []}
+      {:spec `map? :path [] :val 1 :in [] :trail []}]]
+
+    (s/map-of integer? string?)
     {:a :b}
     [[{:spec `(s/map-of integer? string?)
        :path [0]
@@ -160,6 +176,12 @@
       {:spec `string? :path [] :val :b :in [] :trail [1]}]]
 
     (s/every-kv integer? string?)
+    1
+    [[{:spec `(s/every-kv integer? string?) :path [] :val 1 :in []
+       :trail []}
+      {:spec `coll? :path [] :val 1 :in [] :trail []}]]
+
+    (s/every-kv integer? string?)
     {:a :b}
     [[{:spec `(s/every-kv integer? string?)
        :path [0]
@@ -173,6 +195,11 @@
        :in [:a 1]
        :trail []}
       {:spec `string? :path [] :val :b :in [] :trail [1]}]]
+
+    (s/keys :req-un [::x ::y])
+    1
+    [[{:spec `(s/keys :req-un [::x ::y]) :path [] :val 1 :in [] :trail []}
+      {:spec 'map? :path [] :val 1 :in [] :trail []}]]
 
     (s/keys :req-un [::x ::y])
     {}

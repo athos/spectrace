@@ -77,12 +77,14 @@
                  :in in)
           (update :trail conj segment)))))
 
-(defn- step-for-every [{:keys [val in] :as state}]
-  (let [[key & in] in]
-    (-> state
-        (update :spec second)
-        (assoc :val (nth (seq val) key))
-        (assoc :in in))))
+(defn- step-for-every [{:keys [path val in pred] :as state}]
+  (if (and (empty? path) (= pred `coll?))
+    (assoc state :spec pred)
+    (let [[key & in] in]
+      (-> state
+          (update :spec second)
+          (assoc :val (nth (seq val) key))
+          (assoc :in in)))))
 
 (defmethod step `s/every [state]
   (step-for-every state))
@@ -100,11 +102,15 @@
                :val (-> val (find key1) (nth key2)) :in in)
         (update :trail conj key2))))
 
-(defmethod step `s/map-of [state]
-  (step-for-every-kv state))
+(defmethod step `s/map-of [{:keys [path pred] :as state}]
+  (if (and (empty? path) (= pred `map?))
+    (assoc state :spec pred)
+    (step-for-every-kv state)))
 
-(defmethod step `s/every-kv [state]
-  (step-for-every-kv state))
+(defmethod step `s/every-kv [{:keys [path pred] :as state}]
+  (if (and (empty? path) (= pred `coll?))
+    (assoc state :spec pred)
+    (step-for-every-kv state)))
 
 (defn- possible-keys [[& {:as args}]]
   (letfn [(walk [ret maybe-key]
@@ -123,12 +129,14 @@
                       & {:keys [val-fn]}]
   (let [keys (possible-keys (rest spec))]
     (if (empty? path)
-      (let [fn? (s/cat :fn `#{fn} :args (s/tuple '#{%})
-                       :body (s/and seq?
-                                    (s/cat :f `#{contains?} :arg '#{%}
-                                           :key #(contains? keys %))))]
-        (assert (s/valid? fn? pred))
-        (assoc state :spec pred))
+      (if (= pred 'map?)
+        (assoc state :spec pred)
+        (let [fn? (s/cat :fn `#{fn} :args (s/tuple '#{%})
+                         :body (s/and seq?
+                                      (s/cat :f `#{contains?} :arg '#{%}
+                                             :key #(contains? keys %))))]
+          (assert (s/valid? fn? pred))
+          (assoc state :spec pred)))
       (let [[segment & path] path
             [key & in] (:in state)]
         (-> state
