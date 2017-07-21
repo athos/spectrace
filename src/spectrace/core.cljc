@@ -166,21 +166,29 @@
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
 
-(defn- regex-postprocess [{:keys [spec val in] :as state}]
+(defn- regex-postprocess [{:keys [spec path val in pred reason] :as state}]
   (if (or (and (seq? spec) (contains? regex-ops (first spec)))
           (empty? in))
-    state
+    (if (and (empty? path) (= reason "Insufficient input"))
+      (assoc state :spec pred)
+      state)
     (let [[key & in] in]
       (assoc state :val (nth val key) :in in))))
 
-(defmethod step `s/cat [state]
-  (regex-postprocess (step-forward state)))
+(defn- with-regex-processing [{:keys [path reason] :as state} f]
+  (when-not (and (empty? path) (= reason "Extra input"))
+    (f state)))
+
+(defmethod step `s/cat [{:keys [path pred] :as state}]
+  (with-regex-processing state
+    #(regex-postprocess (step-forward %))))
 
 (defmethod step `s/& [state]
   (interleave-specs (rest (:spec state)) state))
 
 (defmethod step `s/alt [state]
-  (regex-postprocess (step-forward state)))
+  (with-regex-processing state
+    #(regex-postprocess (step-forward %))))
 
 (defn- step-for-rep [{:keys [val in] :as state}]
   (-> state
@@ -188,7 +196,7 @@
       regex-postprocess))
 
 (defmethod step `s/? [state]
-  (step-for-rep state))
+  (with-regex-processing state step-for-rep))
 
 (defmethod step `s/* [state]
   (step-for-rep state))
@@ -233,14 +241,17 @@
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))
 
-(defn- trace [{:keys [path in val pred] :as problem} spec value]
+(defn- trace [{:keys [path in val pred reason] :as problem} spec value]
   (let [state (normalize {:spec spec :path path :val value :in in})]
     (loop [{:keys [spec] :as state} state,
            ret [state]]
       (if (= spec pred)
         ret
-        (let [state' (normalize (step (assoc state :pred pred)))]
-          (recur state' (conj ret state')))))))
+        (if-let [state' (some-> (step (cond-> (assoc state :pred pred)
+                                        reason (assoc :reason reason)))
+                                normalize)]
+          (recur state' (conj ret state'))
+          ret)))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
   (binding [*problem-indexes* {}]

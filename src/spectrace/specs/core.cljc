@@ -7,16 +7,17 @@
 (s/def ::val any?)
 (s/def ::in (s/coll-of any?))
 (s/def ::pred any?)
+(s/def ::reason string?)
 (s/def ::spec-name keyword?)
 (s/def ::trails (s/coll-of any?))
 
 (s/def ::state
   (s/keys :req-un [::spec ::path ::val ::in ::trails]
-          :opt-un [::spec-name]))
+          :opt-un [::reason ::spec-name]))
 
 (s/fdef strace/step
   :args (s/cat :state ::state)
-  :ret ::state)
+  :ret (s/nilable ::state))
 
 (s/def ::problem
   (s/keys :req-un [::pred ::path ::val ::in]))

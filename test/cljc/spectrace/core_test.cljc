@@ -296,11 +296,20 @@
        :trail [:more]}
       {:spec `string? :path [] :val 3 :in [] :trail [:more :str]}]]
 
-    ;; Add this after CLJ-2178 is fixed
+    ;; Add following tests after CLJ-2178 is fixed
+    #_(s/& integer? even?)
+    #_[]
+    #_[[{:spec `(s/& integer? even?) :path [] :val [] :in [] :trail []}
+      {:spec `integer? :path [] :val [] :in [] :trail []}]]
+
     #_(s/& integer? even?)
     #_[1]
     #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0] :trail []}
       {:spec `even? :path [] :val 1 :in [] :trail [1]}]]
+
+    #_(s/& integer? even?)
+    #_[2 4]
+    #_[[{:spec `(s/& integer? even?) :path [] :val [2 4] :in [1] :trail []}]]
 
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
@@ -333,6 +342,24 @@
        :in []
        :trail [1]}]]
 
+    (s/& (s/cat :x integer? :y integer?)
+         (fn [{:keys [x y]}] (< x y)))
+    [3 4 5]
+    [[{:spec `(s/& (s/cat :x integer? :y integer?)
+                   (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
+       :path []
+       :val [3 4 5]
+       :in [2]
+       :trail []}]]
+
+    (s/alt :int integer? :str string?)
+    []
+    [[{:spec `(s/alt :int integer? :str string?)
+       :path []
+       :val []
+       :in []
+       :trail []}]]
+
     (s/alt :int integer? :str string?)
     [:a]
     [[{:spec `(s/alt :int integer? :str string?)
@@ -347,6 +374,14 @@
        :in [0]
        :trail []}
       {:spec `string? :path [] :val :a :in [] :trail [:str]}]]
+
+    (s/alt :int integer? :str string?)
+    [1 2]
+    [[{:spec `(s/alt :int integer? :str string?)
+       :path []
+       :val [1 2]
+       :in [1]
+       :trail []}]]
 
     (s/alt :one integer? :two (s/cat :first integer? :second integer?))
     [1 'foo]
@@ -363,10 +398,23 @@
        :trail [:two]}
       {:spec `integer? :path [] :val 'foo :in [] :trail [:two :second]}]]
 
+    (s/alt :one integer? :two (s/cat :first integer? :second integer?))
+    [1 2 3]
+    [[{:spec `(s/alt :one integer?
+                     :two (s/cat :first integer? :second integer?))
+       :path []
+       :val [1 2 3]
+       :in [2]
+       :trail []}]]
+
     (s/? integer?)
     [:a]
     [[{:spec `(s/? integer?) :path [] :val [:a] :in [0] :trail []}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
+
+    (s/? integer?)
+    [1 2]
+    [[{:spec `(s/? integer?) :path [] :val [1 2] :in [1] :trail []}]]
 
     (s/? (s/cat :int integer? :str string?))
     [1 :a]
@@ -382,10 +430,32 @@
        :trail []}
       {:spec `string? :path [] :val :a :in [] :trail [:str]}]]
 
+    (s/? (s/cat :int integer? :str string?))
+    [1 "foo" 'bar]
+    [[{:spec `(s/? (s/cat :int integer? :str string?))
+       :path []
+       :val [1 "foo" 'bar]
+       :in [2]
+       :trail []}]]
+
     (s/* integer?)
     [1 :a 3]
     [[{:spec `(s/* integer?) :path [] :val [1 :a 3] :in [1] :trail []}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
+
+    (s/* (s/cat :int integer? :str string?))
+    [1 "foo" 2]
+    [[{:spec `(s/* (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 "foo" 2]
+       :in []
+       :trail []}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 "foo" 2]
+       :in []
+       :trail []}
+      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]}]]
 
     (s/* (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
@@ -402,9 +472,29 @@
       {:spec `string? :path [] :val :bar :in [] :trail [:str]}]]
 
     (s/+ integer?)
+    []
+    [[{:spec `(s/+ integer?) :path [] :val [] :in [] :trail []}
+      {:spec `integer? :path [] :val [] :in [] :trail []}]]
+
+    (s/+ integer?)
     [:a]
     [[{:spec `(s/+ integer?) :path [] :val [:a] :in [0] :trail []}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
+
+    (s/+ (s/cat :int integer? :str string?))
+    [1 "foo" 2]
+    [[{:spec `(s/+ (s/cat :int integer? :str string?))
+       :path [:str]
+       :val [1 "foo" 2]
+       :in []
+       :trail []}
+      {:spec `(s/cat :int integer? :str string?)
+       :path [:str]
+       :val [1 "foo" 2]
+       :in []
+       :trail []}
+      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]}]]
+
 
     (s/+ (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
