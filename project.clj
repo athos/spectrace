@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :test-paths ["test/cljc"]
+  :test-paths ["test/clj" "test/cljc"]
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
                  [org.clojure/clojurescript "1.9.671"]]
@@ -24,14 +24,12 @@
                                    :target :nodejs}}]}
 
   :profiles {:dev
-             {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]]
+             {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]
+                             [eftest "0.3.1"]]
               :plugins [[lein-cloverage "1.0.9"]
-                        [lein-eftest "0.3.1"]
                         [lein-doo "0.1.7"]]}}
 
-  :eftest {:report eftest.report.pretty/report}
-
-  :aliases {"test-clj" ["eftest"]
+  :aliases {"test-clj" ["run" "-m" "spectrace.test-runner"]
             "test-cljs" ["do" ["test-cljs-none" "once"]
                               ["test-cljs-node" "once"]]
             "test-cljs-none" ["doo" "phantom" "test"]
