@@ -9,10 +9,10 @@
 (s/def ::pred any?)
 (s/def ::reason string?)
 (s/def ::spec-name keyword?)
-(s/def ::trails (s/coll-of any?))
+(s/def ::trail (s/coll-of any?))
 
 (s/def ::state
-  (s/keys :req-un [::spec ::path ::val ::in ::trails]
+  (s/keys :req-un [::spec ::path ::val ::in ::trail]
           :opt-un [::reason ::spec-name]))
 
 (s/fdef strace/step
@@ -22,11 +22,11 @@
 (s/def ::problem
   (s/keys :req-un [::pred ::path ::val ::in]))
 (s/def ::s/spec
-  (s/or :spec s/spec? :regex s/regex? :fn fn? :set set?))
+  (s/or :spec s/spec? :regex s/regex? :fn fn? :set set? :keyword keyword?))
 (s/def ::s/value any?)
 
 (s/fdef strace/trace
-  :args (s/cat :problem ::s/problem
+  :args (s/cat :problem ::problem
                :spec  ::s/spec
                :value ::s/value)
   :ret (s/coll-of ::state))
