@@ -28,7 +28,7 @@
   (update state :spec second))
 
 (defn- interleave-specs [specs {:keys [val trail] :as state}]
-  (loop [i 0, [spec & specs] specs, val val]
+  (loop [i 0, [spec & specs] specs, val val, snapshots [val]]
     (assert (not (nil? spec)))
     (let [evaled-spec (eval* spec)
           conformed (s/conform evaled-spec val)]
@@ -37,8 +37,9 @@
               trail (conj trail i)
               {:keys [path in]} (next-problem ed trail)]
           (assoc state
-                 :spec spec :path path :val val :in in :trail trail))
-        (recur (inc i) specs conformed)))))
+                 :spec spec :path path :val val :in in
+                 :trail trail :snapshots snapshots))
+        (recur (inc i) specs conformed (conj snapshots conformed))))))
 
 (defmethod step `s/and [state]
   (interleave-specs (rest (:spec state)) state))
@@ -228,15 +229,16 @@
 (defmethod step `s/nonconforming [state]
   (update state :spec second))
 
-(defn- normalize [{:keys [spec path val in trail]}]
+(defn- normalize [{:keys [spec path val in trail snapshots]}]
   (let [spec' (if (or (keyword? spec) (s/spec? spec) (s/regex? spec))
                 (s/form spec)
                 spec)
-        state {:spec spec'
-               :path (vec path)
-               :val val
-               :in (vec in)
-               :trail (vec trail)}]
+        state (cond-> {:spec spec'
+                       :path (vec path)
+                       :val val
+                       :in (vec in)
+                       :trail (vec trail)}
+                snapshots (assoc :snapshots snapshots))]
     (if (keyword? spec)
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))
@@ -250,7 +252,7 @@
         (if-let [state' (some-> (step (cond-> (assoc state :pred pred)
                                         reason (assoc :reason reason)))
                                 normalize)]
-          (recur state' (conj ret state'))
+          (recur (dissoc state' :snapshots) (conj ret state'))
           ret)))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]

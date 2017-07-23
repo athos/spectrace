@@ -29,9 +29,23 @@
        :spec-name ::x}]]
 
     (s/and integer? even?)
+    :a
+    [[{:spec `(s/and integer? even?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [0] :snapshots [:a]}]]
+
+    (s/and integer? even?)
     3
     [[{:spec `(s/and integer? even?) :path [] :val 3 :in [] :trail []}
-      {:spec `even? :path [] :val 3 :in [] :trail [1]}]]
+      {:spec `even? :path [] :val 3 :in [] :trail [1] :snapshots [3 3]}]]
+
+    (s/and integer? (s/conformer (fn [x] (mod x 2))) zero?)
+    3
+    [[{:spec `(s/and integer? (s/conformer (fn [~'x] (mod ~'x 2))) zero?)
+       :path []
+       :val 3
+       :in []
+       :trail []}
+      {:spec `zero? :path [] :val 1 :in [] :trail [2] :snapshots [3 3 1]}]]
 
     (s/or :int integer? :str string?)
     :a
@@ -305,7 +319,7 @@
     #_(s/& integer? even?)
     #_[1]
     #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0] :trail []}
-      {:spec `even? :path [] :val 1 :in [] :trail [1]}]]
+      {:spec `even? :path [] :val 1 :in [] :trail [1] :snapshots [1 1]}]]
 
     #_(s/& integer? even?)
     #_[2 4]
@@ -324,7 +338,8 @@
        :path [:y]
        :val [4 :a]
        :in [1]
-       :trail [0]}
+       :trail [0]
+       :snapshots [[4 :a]]}
       {:spec `integer? :path [] :val :a :in [] :trail [0 :y]}]]
 
     (s/& (s/cat :x integer? :y integer?)
@@ -340,7 +355,8 @@
        :path []
        :val {:x 4 :y 3}
        :in []
-       :trail [1]}]]
+       :trail [1]
+       :snapshots [[4 3] {:x 4 :y 3}]}]]
 
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))

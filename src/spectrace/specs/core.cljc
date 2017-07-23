@@ -8,12 +8,13 @@
 (s/def ::in (s/coll-of any?))
 (s/def ::pred any?)
 (s/def ::reason string?)
-(s/def ::spec-name keyword?)
 (s/def ::trail (s/coll-of any?))
+(s/def ::spec-name keyword?)
+(s/def ::snapshots (s/coll-of any?))
 
 (s/def ::state
   (s/keys :req-un [::spec ::path ::val ::in ::trail]
-          :opt-un [::reason ::spec-name]))
+          :opt-un [::reason ::spec-name ::snapshots]))
 
 (s/fdef strace/step
   :args (s/cat :state ::state)
