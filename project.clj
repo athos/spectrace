@@ -25,7 +25,8 @@
 
   :profiles {:dev
              {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]
-                             [eftest "0.3.1"]]
+                             [eftest "0.3.1"]
+                             [orchestra "2017.07.04-1"]]
               :plugins [[lein-cloverage "1.0.9"]
                         [lein-doo "0.1.7"]]}}
 
