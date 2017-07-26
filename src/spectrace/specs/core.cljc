@@ -3,9 +3,9 @@
             [spectrace.core :as strace]))
 
 (s/def ::spec any?)
-(s/def ::path (s/coll-of any?))
+(s/def ::path (s/nilable (s/coll-of any?)))
 (s/def ::val any?)
-(s/def ::in (s/coll-of any?))
+(s/def ::in (s/nilable (s/coll-of any?)))
 (s/def ::pred any?)
 (s/def ::reason string?)
 (s/def ::trail (s/coll-of any?))
