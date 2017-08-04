@@ -7,7 +7,6 @@
   #?(:clj eval :cljs nil))
 
 (defn- eval* [x]
-  (assert specium/*eval-fn* "spectrace.core/*eval-fn* must be bound")
   (specium/->spec x))
 
 (def ^:private ^:dynamic *problem-indexes*)
@@ -257,6 +256,9 @@
           ret)))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
-  (binding [specium/*eval-fn* *eval-fn*
+  (binding [specium/*eval-fn* (fn [x]
+                                (assert *eval-fn*
+                                        (str `*eval-fn* " must be bound"))
+                                (*eval-fn* x))
             *problem-indexes* {}]
     (mapv #(trace % spec value) (::s/problems ed))))
