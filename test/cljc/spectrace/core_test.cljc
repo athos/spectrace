@@ -28,20 +28,18 @@
     [[{:spec `integer? :path [] :val :a :in [] :trail []
        :spec-name ::x}]]
 
-    ;; eval is necessary to test the three cases below, but I don't
+    (s/and integer? even?)
+    :a
+    [[{:spec `(s/and integer? even?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail [0] :snapshots [:a]}]]
+
+    (s/and integer? even?)
+    3
+    [[{:spec `(s/and integer? even?) :path [] :val 3 :in [] :trail []}
+      {:spec `even? :path [] :val 3 :in [] :trail [1] :snapshots [3 3]}]]
+
+    ;; eval is necessary to test the following case, but I don't
     ;; know how we can prepare it for CLJS at the moment.
-    #?@(:clj
-        ((s/and integer? even?)
-         :a
-         [[{:spec `(s/and integer? even?) :path [] :val :a :in [] :trail []}
-           {:spec `integer? :path [] :val :a :in [] :trail [0] :snapshots [:a]}]]))
-
-    #?@(:clj
-        ((s/and integer? even?)
-         3
-         [[{:spec `(s/and integer? even?) :path [] :val 3 :in [] :trail []}
-           {:spec `even? :path [] :val 3 :in [] :trail [1] :snapshots [3 3]}]]))
-
     #?@(:clj
         ((s/and integer? (s/conformer (fn [x] (mod x 2))) zero?)
          3
@@ -246,45 +244,41 @@
        :trail []}
       {:spec `keyword? :path [] :val 42 :in [] :trail [::z] :spec-name ::z}]]
 
-    ;; eval is necessary to test the two cases below, but I don't
-    ;; know how we can prepare it for CLJS at the moment.
-    #?@(:clj
-        ((s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
-         {:x :a}
-         [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
-            :path [:x]
-            :val {:x :a}
-            :in [:x]
-            :trail []}
-           {:spec `(s/keys :req-un [::x]) :path [:x] :val {:x :a} :in [:x]
-            :trail [0]}
-           {:spec `integer? :path [] :val :a :in [] :spec-name ::x
-            :trail [0 :x]}]
-          [{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
-            :path []
-            :val {:x :a}
-            :in []
-            :trail []}
-           {:spec `(s/keys :req-un [::y]) :path [] :val {:x :a} :in []
-            :trail [1]}
-           {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {:x :a} :in []
-            :trail [1]}]]))
+    (s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+    {:x :a}
+    [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path [:x]
+       :val {:x :a}
+       :in [:x]
+       :trail []}
+      {:spec `(s/keys :req-un [::x]) :path [:x] :val {:x :a} :in [:x]
+       :trail [0]}
+      {:spec `integer? :path [] :val :a :in [] :spec-name ::x
+       :trail [0 :x]}]
+     [{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path []
+       :val {:x :a}
+       :in []
+       :trail []}
+      {:spec `(s/keys :req-un [::y]) :path [] :val {:x :a} :in []
+       :trail [1]}
+      {:spec `(fn [~'%] (contains? ~'% :y)) :path [] :val {:x :a} :in []
+       :trail [1]}]]
 
-    #?@(:clj
-        ((s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
-         {:x 1 :y 'foo}
-         [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
-            :path [:y]
-            :val {:x 1 :y 'foo}
-            :in [:y]
-            :trail []}
-           {:spec `(s/keys :req-un [::y])
-            :path [:y]
-            :val {:x 1 :y 'foo}
-            :in [:y]
-            :trail [1]}
-           {:spec `string? :path [] :val 'foo :in [] :trail [1 :y]
-            :spec-name ::y}]]))
+    (s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+    {:x 1 :y 'foo}
+    [[{:spec `(s/merge (s/keys :req-un [::x]) (s/keys :req-un [::y]))
+       :path [:y]
+       :val {:x 1 :y 'foo}
+       :in [:y]
+       :trail []}
+      {:spec `(s/keys :req-un [::y])
+       :path [:y]
+       :val {:x 1 :y 'foo}
+       :in [:y]
+       :trail [1]}
+      {:spec `string? :path [] :val 'foo :in [] :trail [1 :y]
+       :spec-name ::y}]]
 
     (s/cat :int integer? :str string?)
     [1]
@@ -334,26 +328,25 @@
     #_[2 4]
     #_[[{:spec `(s/& integer? even?) :path [] :val [2 4] :in [1] :trail []}]]
 
-    ;; eval is necessary to test the two cases below, but I don't
-    ;; know how we can prepare it for CLJS at the moment.
-    #?@(:clj
-        ((s/& (s/cat :x integer? :y integer?)
-              (fn [{:keys [x y]}] (< x y)))
-         [4 :a]
-         [[{:spec `(s/& (s/cat :x integer? :y integer?)
-                        (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
-            :path [:y]
-            :val [4 :a]
-            :in [1]
-            :trail []}
-           {:spec `(s/cat :x integer? :y integer?)
-            :path [:y]
-            :val [4 :a]
-            :in [1]
-            :trail [0]
-            :snapshots [[4 :a]]}
-           {:spec `integer? :path [] :val :a :in [] :trail [0 :y]}]]))
+    (s/& (s/cat :x integer? :y integer?)
+         (fn [{:keys [x y]}] (< x y)))
+    [4 :a]
+    [[{:spec `(s/& (s/cat :x integer? :y integer?)
+                   (fn [{:keys [~'x ~'y]}] (< ~'x ~'y)))
+       :path [:y]
+       :val [4 :a]
+       :in [1]
+       :trail []}
+      {:spec `(s/cat :x integer? :y integer?)
+       :path [:y]
+       :val [4 :a]
+       :in [1]
+       :trail [0]
+       :snapshots [[4 :a]]}
+      {:spec `integer? :path [] :val :a :in [] :trail [0 :y]}]]
 
+    ;; eval is necessary to test the following case, but I don't
+    ;; know how we can prepare it for CLJS at the moment.
     #?@(:clj
         ((s/& (s/cat :x integer? :y integer?)
               (fn [{:keys [x y]}] (< x y)))
