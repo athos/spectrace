@@ -7,7 +7,8 @@
   :test-paths ["test/clj" "test/cljc"]
 
   :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
-                 [org.clojure/clojurescript "1.9.854"]]
+                 [org.clojure/clojurescript "1.9.854"]
+                 [specium "0.1.0-SNAPSHOT"]]
 
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test/cljc" "test/cljs"]

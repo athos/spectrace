@@ -1,13 +1,14 @@
 (ns spectrace.core
   (:require [clojure.spec.alpha :as s]
-            #?(:cljs [cljs.compiler :as comp])))
+            #?(:cljs [cljs.compiler :as comp])
+            [specium.core :as specium]))
 
 (def ^:dynamic *eval-fn*
   #?(:clj eval :cljs nil))
 
 (defn- eval* [x]
-  (assert *eval-fn* "spectrace.core/*eval-fn* must be bound")
-  (*eval-fn* x))
+  (assert specium/*eval-fn* "spectrace.core/*eval-fn* must be bound")
+  (specium/->spec x))
 
 (def ^:private ^:dynamic *problem-indexes*)
 
@@ -256,5 +257,6 @@
           ret)))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
-  (binding [*problem-indexes* {}]
+  (binding [specium/*eval-fn* *eval-fn*
+            *problem-indexes* {}]
     (mapv #(trace % spec value) (::s/problems ed))))
