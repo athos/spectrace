@@ -31,7 +31,9 @@
               :plugins [[lein-cloverage "1.0.9"]
                         [lein-doo "0.1.7"]]}}
 
-  :aliases {"test-clj" ["run" "-m" "spectrace.test-runner"]
+  :eftest {:report eftest.report.pretty/report}
+
+  :aliases {"test-clj" ["test"]
             "test-cljs" ["do" #_["test-cljs-none" "once"]
                               ["test-cljs-node" "once"]]
             "test-cljs-none" ["doo" "phantom" "test"]

@@ -1,10 +1,19 @@
 (ns spectrace.core-test
   (:require [clojure.spec.alpha :as s]
-            [clojure.test :refer [deftest is are]]
+            #?(:clj [orchestra.spec.test :as st]
+               :cljs [orchestra-cljs.spec.test :as st])
+            [clojure.test :refer [deftest are use-fixtures]]
             #?@(:cljs ([clojure.test.check]
                        [clojure.test.check.generators]
                        [clojure.test.check.properties]))
-            [spectrace.core :as strace]))
+            [spectrace.core :as strace]
+            spectrace.specs.core))
+
+(use-fixtures :once
+  (fn [f]
+    (st/instrument)
+    (f)
+    (st/unstrument)))
 
 (s/def ::x integer?)
 (s/def ::y string?)
