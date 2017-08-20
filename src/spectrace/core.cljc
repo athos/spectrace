@@ -167,43 +167,45 @@
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
 
-(defn- regex-postprocess [{:keys [spec path val in pred reason] :as state}]
-  (if (or (and (seq? spec) (contains? regex-ops (first spec)))
-          (empty? in))
-    (if (and (empty? path) (= reason "Insufficient input"))
-      (assoc state :spec pred)
-      state)
-    (let [[key & in] in]
-      (assoc state :val (nth val key) :in in))))
-
-(defn- with-regex-processing [{:keys [path reason] :as state} f]
+(defn- with-regex-processing [{:keys [path reason pred] :as state} f
+                              & {:keys [insufficient?]
+                                 :or {insufficient? empty?}}]
   (when-not (and (empty? path) (= reason "Extra input"))
-    (f state)))
+    (let [{:keys [spec path val in] :as state'} (f state)]
+      (cond (and (seq? spec) (contains? regex-ops (first spec)))
+            state'
 
-(defmethod step `s/cat [{:keys [path pred] :as state}]
+            (and (insufficient? path) (= reason "Insufficient input"))
+            (assoc state' :spec pred)
+
+            (empty? in)
+            state'
+
+            :else
+            (assoc state' :val (nth val (first in)) :in (rest in))))))
+
+(defmethod step `s/cat [state]
   (with-regex-processing state
-    #(regex-postprocess (step-forward %))))
+    step-forward
+    :insufficient? #(= (count %) 1)))
 
 (defmethod step `s/& [state]
   (interleave-specs (rest (:spec state)) state))
 
 (defmethod step `s/alt [state]
-  (with-regex-processing state
-    #(regex-postprocess (step-forward %))))
+  (with-regex-processing state step-forward))
 
-(defn- step-for-rep [{:keys [val in] :as state}]
-  (-> state
-      (update :spec second)
-      regex-postprocess))
+(defn- step-for-rep [state]
+  (update state :spec second))
 
 (defmethod step `s/? [state]
   (with-regex-processing state step-for-rep))
 
 (defmethod step `s/* [state]
-  (step-for-rep state))
+  (with-regex-processing state step-for-rep))
 
 (defmethod step `s/+ [state]
-  (step-for-rep state))
+  (with-regex-processing state step-for-rep))
 
 (defmethod step `s/fspec [{:keys [path pred] :as state}]
   (if (empty? path)
