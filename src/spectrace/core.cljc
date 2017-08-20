@@ -231,8 +231,9 @@
 (defmethod step `s/nonconforming [state]
   (update state :spec second))
 
-(defn- normalize [{:keys [spec path val in trail snapshots]}]
-  (let [spec' (if (or (keyword? spec) (s/spec? spec) (s/regex? spec))
+(defn- normalize [{:keys [spec path val in trail snapshots]} pred]
+  (let [spec' (if (and (or (keyword? spec) (s/spec? spec) (s/regex? spec))
+                       (not (and (= spec pred) (empty? path))))
                 (s/form spec)
                 spec)
         state (cond-> {:spec spec'
@@ -241,19 +242,19 @@
                        :in (vec in)
                        :trail (vec trail)}
                 snapshots (assoc :snapshots snapshots))]
-    (if (keyword? spec)
+    (if (and (keyword? spec) (not= spec spec'))
       (assoc state :spec-name spec)
       (dissoc state :spec-name))))
 
 (defn- trace [{:keys [path in val pred reason] :as problem} spec value]
-  (let [state (normalize {:spec spec :path path :val value :in in})]
+  (let [state (normalize {:spec spec :path path :val value :in in} pred)]
     (loop [{:keys [spec] :as state} state,
            ret [state]]
       (if (= spec pred)
         ret
         (if-let [state' (some-> (step (cond-> (assoc state :pred pred)
                                         reason (assoc :reason reason)))
-                                normalize)]
+                                (normalize pred))]
           (recur (dissoc state' :snapshots) (conj ret state'))
           ret)))))
 
