@@ -19,6 +19,10 @@
 (s/def ::y string?)
 (s/def ::z keyword?)
 
+(s/def ::value
+  (s/or :atom integer?
+        :pair (s/cat :car ::value :cdr ::value)))
+
 (s/def ::type keyword?)
 (defmulti m :type)
 (defmethod m :x [_] (s/keys :req-un [::type ::x]))
@@ -321,6 +325,30 @@
        :in [2]
        :trail [:more]}
       {:spec `string? :path [] :val 3 :in [] :trail [:more :str]}]]
+
+    ::value
+    [1]
+    [[{:spec `(s/or :atom integer?
+                    :pair (s/cat :car ::value :cdr ::value))
+       :path [:atom]
+       :val [1]
+       :in []
+       :trail []
+       :spec-name ::value}
+      {:spec `integer? :path [] :val [1] :in [] :trail [:atom]}]
+     [{:spec `(s/or :atom integer?
+                    :pair (s/cat :car ::value :cdr ::value))
+       :path [:pair :cdr]
+       :val [1]
+       :in []
+       :trail []
+       :spec-name ::value}
+      {:spec `(s/cat :car ::value :cdr ::value)
+       :path [:cdr]
+       :val [1]
+       :in []
+       :trail [:pair]}
+      {:spec ::value :path [] :val [1] :in [] :trail [:pair :cdr]}]]
 
     ;; Add following tests after CLJ-2178 is fixed
     #_(s/& integer? even?)
