@@ -593,6 +593,11 @@
        :in []
        :trail [:x]}]]
 
+    (s/multi-spec m :type)
+    {:type :z}
+    [[{:spec `(s/multi-spec m :type) :path [:z] :val {:type :z} :in []
+       :trail []}]]
+
     ;; Add this though I'm not sure it's proper usage of s/conformer
     (s/conformer (constantly ::s/invalid))
     42

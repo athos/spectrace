@@ -220,13 +220,14 @@
                  multi (js/eval (str (comp/munge multi-name)))]
              (get-method multi key))))
 
-(defmethod step `s/multi-spec [{:keys [spec path] :as state}]
+(defmethod step `s/multi-spec [{:keys [spec path reason] :as state}]
   (let [[segment & path] path
         multi-name (second spec)]
     (let [method (method-of multi-name segment)]
-      (-> state
-          (assoc :spec (method (:val state)) :path path)
-          (update :trail conj segment)))))
+      (when (and method (not= reason "no method"))
+        (-> state
+            (assoc :spec (method (:val state)) :path path)
+            (update :trail conj segment))))))
 
 (defmethod step `s/nonconforming [state]
   (update state :spec second))
