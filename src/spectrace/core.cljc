@@ -248,16 +248,20 @@
       (dissoc state :spec-name))))
 
 (defn- trace [{:keys [path in val pred reason] :as problem} spec value]
-  (let [state (normalize {:spec spec :path path :val value :in in} pred)]
+  (let [state (normalize {:spec spec :path path :val value :in in} pred)
+        add-reason (fn [states]
+                     (cond-> states
+                       reason
+                       (assoc-in [(dec (count states)) :reason] reason)))]
     (loop [{:keys [spec] :as state} state,
            ret [state]]
       (if (= spec pred)
-        ret
+        (add-reason ret)
         (if-let [state' (some-> (step (cond-> (assoc state :pred pred)
                                         reason (assoc :reason reason)))
                                 (normalize pred))]
           (recur (dissoc state' :snapshots) (conj ret state'))
-          ret)))))
+          (add-reason ret))))))
 
 (defn traces [{:keys [::s/spec ::s/value] :as ed}]
   (binding [specium/*eval-fn* (fn [x]

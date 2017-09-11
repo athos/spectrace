@@ -300,7 +300,8 @@
        :val [1]
        :in []
        :trail []}
-      {:spec `string? :path [] :val [1] :in [] :trail [:str]}]]
+      {:spec `string? :path [] :val [1] :in [] :trail [:str]
+       :reason "Insufficient input"}]]
 
     (s/cat :int integer? :str string?)
     [1 :b]
@@ -348,7 +349,8 @@
        :val [1]
        :in []
        :trail [:pair]}
-      {:spec ::value :path [] :val [1] :in [] :trail [:pair :cdr]}]]
+      {:spec ::value :path [] :val [1] :in [] :trail [:pair :cdr]
+       :reason "Insufficient input"}]]
 
     ;; Add following tests after CLJ-2178 is fixed
     #_(s/& integer? even?)
@@ -359,11 +361,13 @@
     #_(s/& integer? even?)
     #_[1]
     #_[[{:spec `(s/& integer? even?) :path [] :val [1] :in [0] :trail []}
-      {:spec `even? :path [] :val 1 :in [] :trail [1] :snapshots [1 1]}]]
+      {:spec `even? :path [] :val 1 :in [] :trail [1] :snapshots [1 1]
+       :reason "Insufficient input"}]]
 
     #_(s/& integer? even?)
     #_[2 4]
-    #_[[{:spec `(s/& integer? even?) :path [] :val [2 4] :in [1] :trail []}]]
+    #_[[{:spec `(s/& integer? even?) :path [] :val [2 4] :in [1] :trail []
+         :reason "Extra input"}]]
 
     (s/& (s/cat :x integer? :y integer?)
          (fn [{:keys [x y]}] (< x y)))
@@ -409,7 +413,8 @@
        :path []
        :val [3 4 5]
        :in [2]
-       :trail []}]]
+       :trail []
+       :reason "Extra input"}]]
 
     (s/alt :int integer? :str string?)
     []
@@ -417,7 +422,8 @@
        :path []
        :val []
        :in []
-       :trail []}]]
+       :trail []
+       :reason "Insufficient input"}]]
 
     (s/alt :int integer? :str string?)
     [:a]
@@ -440,7 +446,8 @@
        :path []
        :val [1 2]
        :in [1]
-       :trail []}]]
+       :trail []
+       :reason "Extra input"}]]
 
     (s/alt :one integer? :two (s/cat :first integer? :second integer?))
     [1 'foo]
@@ -464,7 +471,19 @@
        :path []
        :val [1 2 3]
        :in [2]
-       :trail []}]]
+       :trail []
+       :reason "Extra input"}]]
+
+    (s/alt :two (s/cat :first integer? :second integer?)
+           :three (s/cat :first integer? :second integer? :third integer?))
+    [1]
+    [[{:spec `(s/alt :two (s/cat :first integer? :second integer?)
+                     :three (s/cat :first integer? :second integer? :third integer?))
+       :path []
+       :val [1]
+       :in []
+       :trail []
+       :reason "Insufficient input"}]]
 
     (s/? integer?)
     [:a]
@@ -473,7 +492,8 @@
 
     (s/? integer?)
     [1 2]
-    [[{:spec `(s/? integer?) :path [] :val [1 2] :in [1] :trail []}]]
+    [[{:spec `(s/? integer?) :path [] :val [1 2] :in [1] :trail []
+       :reason "Extra input"}]]
 
     (s/? (s/cat :int integer? :str string?))
     [1 :a]
@@ -495,7 +515,8 @@
        :path []
        :val [1 "foo" 'bar]
        :in [2]
-       :trail []}]]
+       :trail []
+       :reason "Extra input"}]]
 
     (s/* integer?)
     [1 :a 3]
@@ -514,7 +535,8 @@
        :val [1 "foo" 2]
        :in []
        :trail []}
-      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]}]]
+      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]
+       :reason "Insufficient input"}]]
 
     (s/* (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
@@ -533,7 +555,8 @@
     (s/+ integer?)
     []
     [[{:spec `(s/+ integer?) :path [] :val [] :in [] :trail []}
-      {:spec `integer? :path [] :val [] :in [] :trail []}]]
+      {:spec `integer? :path [] :val [] :in [] :trail []
+       :reason "Insufficient input"}]]
 
     (s/+ integer?)
     [:a]
@@ -552,7 +575,8 @@
        :val [1 "foo" 2]
        :in []
        :trail []}
-      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]}]]
+      {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]
+       :reason "Insufficient input"}]]
 
 
     (s/+ (s/cat :int integer? :str string?))
@@ -596,7 +620,7 @@
     (s/multi-spec m :type)
     {:type :z}
     [[{:spec `(s/multi-spec m :type) :path [:z] :val {:type :z} :in []
-       :trail []}]]
+       :trail [] :reason "no method"}]]
 
     ;; Add this though I'm not sure it's proper usage of s/conformer
     (s/conformer (constantly ::s/invalid))
