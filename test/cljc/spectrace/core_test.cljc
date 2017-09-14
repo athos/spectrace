@@ -147,6 +147,24 @@
       {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
+    (s/coll-of (s/spec integer?) :kind set?)
+    [1 2 3]
+    [[{:spec `(s/coll-of (s/spec integer?) :kind set?)
+       :path []
+       :val [1 2 3]
+       :in []
+       :trail []}
+      {:spec `set? :path [] :val [1 2 3] :in [] :trail []}]]
+
+    (s/coll-of (s/spec integer?) :count 3)
+    [1 2]
+    [[{:spec `(s/coll-of (s/spec integer?) :count 3)
+       :path []
+       :val [1 2]
+       :in []
+       :trail []}
+      {:spec `(= 3 (count ~'%)) :path [] :val [1 2] :in [] :trail []}]]
+
     ;; ditto
     (s/every (s/spec integer?))
     1
@@ -185,6 +203,24 @@
       {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
+    (s/every (s/spec integer?) :kind set?)
+    [1 2 3]
+    [[{:spec `(s/every (s/spec integer?) :kind set?)
+       :path []
+       :val [1 2 3]
+       :in []
+       :trail []}
+      {:spec `set? :path [] :val [1 2 3] :in [] :trail []}]]
+
+    (s/every (s/spec integer?) :count 3)
+    [1 2]
+    [[{:spec `(s/every (s/spec integer?) :count 3)
+       :path []
+       :val [1 2]
+       :in []
+       :trail []}
+      {:spec `(= 3 (count ~'%)) :path [] :val [1 2] :in [] :trail []}]]
+
     (s/map-of integer? string?)
     1
     [[{:spec `(s/map-of integer? string?) :path [] :val 1 :in [] :trail []}
@@ -204,6 +240,15 @@
        :in [:a 1]
        :trail []}
       {:spec `string? :path [] :val :b :in [] :trail [1]}]]
+
+    (s/map-of keyword? integer? :count 3)
+    {:a 0 :b 1}
+    [[{:spec `(s/map-of keyword? integer? :count 3)
+       :path []
+       :val {:a 0 :b 1}
+       :in []
+       :trail []}
+      {:spec `(= 3 (count ~'%)) :path [] :val {:a 0 :b 1} :in [] :trail []}]]
 
     (s/every-kv integer? string?)
     1
@@ -225,6 +270,15 @@
        :in [:a 1]
        :trail []}
       {:spec `string? :path [] :val :b :in [] :trail [1]}]]
+
+    (s/every-kv keyword? integer? :count 3)
+    {:a 0 :b 1}
+    [[{:spec `(s/every-kv keyword? integer? :count 3)
+       :path []
+       :val {:a 0 :b 1}
+       :in []
+       :trail []}
+      {:spec `(= 3 (count ~'%)) :path [] :val {:a 0 :b 1} :in [] :trail []}]]
 
     (s/keys :req-un [::x ::y])
     1

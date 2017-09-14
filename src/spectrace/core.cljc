@@ -79,7 +79,7 @@
           (update :trail conj segment)))))
 
 (defn- step-for-every [{:keys [path val in pred] :as state}]
-  (if (and (empty? path) (= pred `coll?))
+  (if (and (empty? path) (empty? in))
     (assoc state :spec pred)
     (let [[key & in] in]
       (-> state
@@ -93,25 +93,23 @@
 (defmethod step `s/coll-of [state]
   (step-for-every state))
 
-(defn- step-for-every-kv [{:keys [spec path val in] :as state}]
-  (let [[segment & path] path
-        [key1 key2 & in] in
-        pred-key (get #{0 1} segment)
-        specs (take 2 (rest spec))]
-    (-> state
-        (assoc :spec (nth specs pred-key) :path path
-               :val (-> val (find key1) (nth key2)) :in in)
-        (update :trail conj key2))))
-
-(defmethod step `s/map-of [{:keys [path pred] :as state}]
-  (if (and (empty? path) (= pred `map?))
+(defn- step-for-every-kv [{:keys [spec path val in pred] :as state}]
+  (if (and (empty? path) (empty? in))
     (assoc state :spec pred)
-    (step-for-every-kv state)))
+    (let [[segment & path] path
+          [key1 key2 & in] in
+          pred-key (get #{0 1} segment)
+          specs (take 2 (rest spec))]
+      (-> state
+          (assoc :spec (nth specs pred-key) :path path
+                 :val (-> val (find key1) (nth key2)) :in in)
+          (update :trail conj key2)))))
 
-(defmethod step `s/every-kv [{:keys [path pred] :as state}]
-  (if (and (empty? path) (= pred `coll?))
-    (assoc state :spec pred)
-    (step-for-every-kv state)))
+(defmethod step `s/map-of [state]
+  (step-for-every-kv state))
+
+(defmethod step `s/every-kv [state]
+  (step-for-every-kv state))
 
 (defn- possible-keys [[& {:as args}]]
   (letfn [(walk [ret maybe-key]
