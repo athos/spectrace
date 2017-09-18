@@ -165,15 +165,13 @@
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
 
-(defn- with-regex-processing [{:keys [path reason pred] :as state} f
-                              & {:keys [insufficient?]
-                                 :or {insufficient? empty?}}]
+(defn- with-regex-processing [{:keys [path reason pred] :as state} f]
   (when-not (and (empty? path) (= reason "Extra input"))
     (let [{:keys [spec path val in] :as state'} (f state)]
       (cond (and (seq? spec) (contains? regex-ops (first spec)))
             state'
 
-            (and (insufficient? path) (= reason "Insufficient input"))
+            (and (empty? path) (= reason "Insufficient input"))
             (assoc state' :spec pred)
 
             (empty? in)
@@ -183,9 +181,7 @@
             (assoc state' :val (nth val (first in)) :in (rest in))))))
 
 (defmethod step `s/cat [state]
-  (with-regex-processing state
-    step-forward
-    :insufficient? #(= (count %) 1)))
+  (with-regex-processing state step-forward))
 
 (defmethod step `s/& [state]
   (interleave-specs (rest (:spec state)) state))
