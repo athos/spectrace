@@ -168,7 +168,8 @@
 (defn- with-regex-processing [{:keys [path reason pred] :as state} f]
   (when-not (and (empty? path) (= reason "Extra input"))
     (let [{:keys [spec path val in] :as state'} (f state)]
-      (cond (and (seq? spec) (contains? regex-ops (first spec)))
+      (cond (let [spec (cond-> spec (keyword? spec) s/form)]
+              (and (seq? spec) (contains? regex-ops (first spec))))
             state'
 
             (and (empty? path) (= reason "Insufficient input"))

@@ -23,6 +23,9 @@
   (s/or :atom integer?
         :pair (s/cat :car ::value :cdr ::value)))
 
+(s/def ::regex
+  (s/cat :k keyword? :i integer?))
+
 (s/def ::type keyword?)
 (defmulti m :type)
 (defmethod m :x [_] (s/keys :req-un [::type ::x]))
@@ -632,7 +635,6 @@
       {:spec `string? :path [] :val [1 "foo" 2] :in [] :trail [:str]
        :reason "Insufficient input"}]]
 
-
     (s/+ (s/cat :int integer? :str string?))
     [1 "foo" 2 :bar]
     [[{:spec `(s/+ (s/cat :int integer? :str string?))
@@ -646,6 +648,18 @@
        :in [3]
        :trail []}
       {:spec `string? :path [] :val :bar :in [] :trail [:str]}]]
+
+    (s/+ ::regex)
+    [:a 1 :b]
+    [[{:spec `(s/+ ::regex) :path [:i] :val [:a 1 :b] :in [] :trail []}
+      {:spec `(s/cat :k keyword? :i integer?)
+       :path [:i]
+       :val [:a 1 :b]
+       :in []
+       :trail []
+       :spec-name ::regex}
+      {:spec `integer? :path [] :val [:a 1 :b] :in [] :trail [:i]
+       :reason "Insufficient input"}]]
 
     (s/fspec :args (s/cat :n integer?) :ret integer?)
     str
