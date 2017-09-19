@@ -84,8 +84,9 @@
     (let [[key & in] in]
       (-> state
           (update :spec second)
-          (assoc :val (nth (seq val) key))
-          (assoc :in in)))))
+          (assoc :val (nth (seq val) key)
+                 :in in
+                 :snapshots [val (seq val)])))))
 
 (defmethod step `s/every [state]
   (step-for-every state))

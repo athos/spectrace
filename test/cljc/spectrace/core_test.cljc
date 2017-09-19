@@ -122,7 +122,8 @@
     [1 :a]
     [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val [1 :a] :in [1]
        :trail []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []
+       :snapshots '[[1 :a] (1 :a)]}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/coll-of (s/spec (fn [[k v]] (= (str k) v))))
@@ -136,7 +137,8 @@
        :path []
        :val [1 :a]
        :in []
-       :trail []}
+       :trail []
+       :snapshots '[{1 :a} ([1 :a])]}
       {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
        :path []
        :val [1 :a]
@@ -147,7 +149,8 @@
     #{1 :a}
     [[{:spec `(s/coll-of (s/spec integer?)) :path [] :val #{1 :a} :in [1]
        :trail []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []
+       :snapshots '[#{1 :a} (1 :a)]}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/coll-of (s/spec integer?) :kind set?)
@@ -178,7 +181,8 @@
     [1 :a]
     [[{:spec `(s/every (s/spec integer?)) :path [] :val [1 :a] :in [1]
        :trail []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []
+       :snapshots '[[1 :a] (1 :a)]}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/every (s/spec (fn [[k v]] (= (str k) v))))
@@ -192,7 +196,8 @@
        :path []
        :val [1 :a]
        :in []
-       :trail []}
+       :trail []
+       :snapshots '[{1 :a} ([1 :a])]}
       {:spec `(fn [[~'k ~'v]] (= (str ~'k) ~'v))
        :path []
        :val [1 :a]
@@ -203,7 +208,8 @@
     #{1 :a}
     [[{:spec `(s/every (s/spec integer?)) :path [] :val #{1 :a} :in [1]
        :trail []}
-      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []
+       :snapshots '[#{1 :a} (1 :a)]}
       {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     (s/every (s/spec integer?) :kind set?)
