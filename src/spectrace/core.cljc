@@ -11,10 +11,11 @@
 
 (def ^:private ^:dynamic *problem-indexes*)
 
-(defn- next-problem [{:keys [::s/problems]} trail]
-  (let [index (get *problem-indexes* trail 0)]
+(defn- next-problem [{:keys [::s/problems]} trail val]
+  (let [index (get-in *problem-indexes* [trail val] 0)]
     (when (< index (count problems))
-      (set! *problem-indexes* (assoc *problem-indexes* trail (inc index)))
+      (set! *problem-indexes*
+            (assoc-in *problem-indexes* [trail val] (inc index)))
       (nth problems index))))
 
 (defmulti step (fn [state] (first (:spec state))))
@@ -35,7 +36,7 @@
       (if (s/invalid? conformed)
         (let [ed (s/explain-data evaled-spec val)
               trail (conj trail i)
-              {:keys [path in]} (next-problem ed trail)]
+              {:keys [path in]} (next-problem ed trail val)]
           (assoc state
                  :spec spec :path path :val val :in in
                  :trail trail :snapshots snapshots))
@@ -158,7 +159,7 @@
     (assert (not (nil? spec)))
     (if-let [ed (s/explain-data (eval* spec) val)]
       (let [trail (conj trail i)]
-        (if-let [{:keys [path in]} (next-problem ed trail)]
+        (if-let [{:keys [path in]} (next-problem ed trail val)]
           (assoc state :spec spec :path path :in in :trail trail)
           (recur (inc i) specs)))
       (recur (inc i) specs))))

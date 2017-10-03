@@ -719,4 +719,36 @@
        :trail []}
       {:spec `string? :path [] :val 'foo :in [] :trail [:str]}]]
 
+    ;; For https://github.com/athos/spectrace/issues/1
+    (s/coll-of (s/and string? (s/conformer seq) (s/* #{\a \b})))
+    ["aba" "abcab" "ad"]
+    [[{:spec `(s/coll-of (s/and string? (s/conformer seq) (s/* #{\a \b})))
+       :path []
+       :val ["aba" "abcab" "ad"]
+       :in [1 2]
+       :trail []}
+      {:spec `(s/and string? (s/conformer seq) (s/* #{\a \b}))
+       :path []
+       :val "abcab"
+       :in [2]
+       :trail []
+       :snapshots [["aba" "abcab" "ad"] '("aba" "abcab" "ad")]}
+      {:spec `(s/* #{\a \b}) :path [] :val '(\a \b \c \a \b) :in [2]
+       :trail [2] :snapshots ["abcab" "abcab" '(\a \b \c \a \b)]}
+      {:spec #{\a \b} :path [] :val \c :in [] :trail [2]}]
+     [{:spec `(s/coll-of (s/and string? (s/conformer seq) (s/* #{\a \b})))
+       :path []
+       :val ["aba" "abcab" "ad"]
+       :in [2 1]
+       :trail []}
+      {:spec `(s/and string? (s/conformer seq) (s/* #{\a \b}))
+       :path []
+       :val "ad"
+       :in [1]
+       :trail []
+       :snapshots [["aba" "abcab" "ad"] '("aba" "abcab" "ad")]}
+      {:spec `(s/* #{\a \b}) :path [] :val '(\a \d) :in [1]
+       :trail [2] :snapshots ["ad" "ad" '(\a \d)]}
+      {:spec #{\a \b} :path [] :val \d :in [] :trail [2]}]]
+
     ))
