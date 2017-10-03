@@ -28,13 +28,13 @@
              {:dependencies [[org.clojure/test.check "0.10.0-alpha1"]
                              [orchestra "2017.07.04-1"]]
               :plugins [[lein-cloverage "1.0.9"]
-                        [lein-doo "0.1.7"]
+                        [lein-doo "0.1.8"]
                         [lein-eftest "0.3.1"]]}}
 
   :eftest {:report eftest.report.pretty/report}
 
   :aliases {"test-clj" ["eftest"]
-            "test-cljs" ["do" #_["test-cljs-none" "once"]
+            "test-cljs" ["do" ["test-cljs-none" "once"]
                               ["test-cljs-node" "once"]]
             "test-cljs-none" ["doo" "phantom" "test"]
             "test-cljs-node" ["doo" "node" "node-test"]
