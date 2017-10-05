@@ -6,8 +6,8 @@
 
   :test-paths ["test/clj" "test/cljc"]
 
-  :dependencies [[org.clojure/clojure "1.9.0-alpha19" :scope "provided"]
-                 [org.clojure/clojurescript "1.9.908" :scope "provided"]
+  :dependencies [[org.clojure/clojure "1.9.0-beta1" :scope "provided"]
+                 [org.clojure/clojurescript "1.9.946" :scope "provided"]
                  [specium "0.1.0-SNAPSHOT"]]
 
   :cljsbuild {:builds [{:id "test"
