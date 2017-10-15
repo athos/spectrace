@@ -204,6 +204,18 @@
 (defmethod step `s/+ [state]
   (with-regex-processing state step-for-rep))
 
+(defn- step-for-x-in [{:keys [pred] :as state}]
+  (assoc state :spec pred))
+
+(defmethod step `s/int-in [state]
+  (step-for-x-in state))
+
+(defmethod step `s/double-in [state]
+  (step-for-x-in state))
+
+(defmethod step `s/inst-in [state]
+  (step-for-x-in state))
+
 (defmethod step `s/fspec [{:keys [path pred] :as state}]
   (if (empty? path)
     (assoc state :spec pred)

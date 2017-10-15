@@ -667,6 +667,91 @@
       {:spec `integer? :path [] :val [:a 1 :b] :in [] :trail [:i]
        :reason "Insufficient input"}]]
 
+    (s/coll-of (s/int-in 0 5))
+    [0 :a 2]
+    [[{:spec `(s/coll-of (s/int-in 0 5)) :path [] :val [0 :a 2] :in [1]
+       :trail []}
+      {:spec `(s/int-in 0 5) :path [] :val :a :in [] :trail []
+       :snapshots [[0 :a 2] '(0 :a 2)]}
+      {:spec `int? :path [] :val :a :in [] :trail []}]]
+
+    (s/coll-of (s/int-in 0 5))
+    [0 5 2]
+    [[{:spec `(s/coll-of (s/int-in 0 5)) :path [] :val [0 5 2] :in [1]
+       :trail []}
+      {:spec `(s/int-in 0 5) :path [] :val 5 :in [] :trail []
+       :snapshots [[0 5 2] '(0 5 2)]}
+      {:spec `(fn [~'%] (s/int-in-range? 0 5 ~'%)) :path [] :val 5 :in []
+       :trail []}]]
+
+    (s/coll-of (s/double-in :min 0 :max 5))
+    [0.0 :a 2.0]
+    [[{:spec `(s/coll-of (s/double-in :min 0 :max 5))
+       :path []
+       :val [0.0 :a 2.0]
+       :in [1]
+       :trail []}
+      {:spec `(s/double-in :min 0 :max 5)
+       :path []
+       :val :a
+       :in []
+       :trail []
+       :snapshots [[0.0 :a 2.0] '(0.0 :a 2.0)]}
+      {:spec `double? :path [] :val :a :in [] :trail []}]]
+
+    (s/coll-of (s/double-in :min 0 :max 5))
+    [0.0 10.0 2.0]
+    [[{:spec `(s/coll-of (s/double-in :min 0 :max 5))
+       :path []
+       :val [0.0 10.0 2.0]
+       :in [1]
+       :trail []}
+      {:spec `(s/double-in :min 0 :max 5)
+       :path []
+       :val 10.0
+       :in []
+       :trail []
+       :snapshots [[0.0 10.0 2.0] '(0.0 10.0 2.0)]}
+      {:spec `(fn [~'%] (<= ~'% 5)) :path [] :val 10.0 :in [] :trail []}]]
+
+    (s/coll-of (s/inst-in #inst "2016-01-01" #inst "2017-01-01"))
+    [#inst "2016-01-01" nil]
+    [[{:spec `(s/coll-of (s/inst-in #inst "2016-01-01" #inst "2017-01-01"))
+       :path []
+       :val [#inst "2016-01-01" nil]
+       :in [1]
+       :trail []}
+      {:spec `(s/inst-in #inst "2016-01-01" #inst "2017-01-01")
+       :path []
+       :val nil
+       :in []
+       :trail []
+       :snapshots [[#inst "2016-01-01" nil] '(#inst "2016-01-01" nil)]}
+      {:spec `inst? :path [] :val nil :in [] :trail []}]]
+
+    (s/coll-of (s/inst-in #inst "2016-01-01" #inst "2017-01-01"))
+    [#inst "2016-01-01" #inst "2018-01-01"]
+    [[{:spec `(s/coll-of (s/inst-in #inst "2016-01-01" #inst "2017-01-01"))
+       :path []
+       :val [#inst "2016-01-01" #inst "2018-01-01"]
+       :in [1]
+       :trail []}
+      {:spec `(s/inst-in #inst "2016-01-01" #inst "2017-01-01")
+       :path []
+       :val #inst "2018-01-01"
+       :in []
+       :trail []
+       :snapshots [[#inst "2016-01-01" #inst "2018-01-01"]
+                   '(#inst "2016-01-01" #inst "2018-01-01")]}
+      {:spec `(fn [~'%]
+                (s/inst-in-range? #inst "2016-01-01"
+                                  #inst "2017-01-01"
+                                  ~'%))
+       :path []
+       :val #inst "2018-01-01"
+       :in []
+       :trail []}]]
+
     (s/fspec :args (s/cat :n integer?) :ret integer?)
     str
     [[{:spec `(s/fspec :args (s/cat :n integer?) :ret integer? :fn nil)
