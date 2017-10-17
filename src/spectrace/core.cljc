@@ -241,6 +241,9 @@
 (defmethod step `s/nonconforming [state]
   (update state :spec second))
 
+(defmethod step `s/with-gen [state]
+  (update state :spec second))
+
 (defn- normalize [{:keys [spec path val in trail snapshots]} pred]
   (let [spec' (if (and (or (keyword? spec) (s/spec? spec) (s/regex? spec))
                        (not (and (= spec pred) (empty? path))))

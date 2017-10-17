@@ -1,5 +1,6 @@
 (ns spectrace.core-test
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             #?(:clj [orchestra.spec.test :as st]
                :cljs [orchestra-cljs.spec.test :as st])
             [clojure.test :refer [deftest are use-fixtures]]
@@ -803,6 +804,26 @@
        :in [1]
        :trail []}
       {:spec `string? :path [] :val 'foo :in [] :trail [:str]}]]
+
+    (s/with-gen (s/spec integer?) #(gen/return 1))
+    :a
+    [[{:spec `integer? :path [] :val :a :in [] :trail []}]]
+
+    (s/coll-of (s/with-gen (s/spec integer?) #(gen/return 1)))
+    [:a]
+    [[{:spec `(s/coll-of (s/with-gen (s/spec integer?) #(gen/return 1)))
+       :path []
+       :val [:a]
+       :in [0]
+       :trail []}
+      {:spec `(s/with-gen (s/spec integer?) #(gen/return 1))
+       :path []
+       :val :a
+       :in []
+       :trail []
+       :snapshots [[:a] '(:a)]}
+      {:spec `(s/spec integer?) :path [] :val :a :in [] :trail []}
+      {:spec `integer? :path [] :val :a :in [] :trail []}]]
 
     ;; For https://github.com/athos/spectrace/issues/1
     (s/coll-of (s/and string? (s/conformer seq) (s/* #{\a \b})))
