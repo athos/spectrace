@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/athos/spectrace.svg?style=shield)](https://circleci.com/gh/athos/spectrace)
 [![codecov](https://codecov.io/gh/athos/spectrace/branch/master/graph/badge.svg)](https://codecov.io/gh/athos/spectrace)
 
-clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors
+_spectrace_ is a clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors.
 
 ## Installation
 
@@ -11,7 +11,7 @@ Add the following to your `:dependencies`:
 
 [![Clojars Project](https://clojars.org/spectrace/latest-version.svg)](http://clojars.org/spectrace)
 
-## Why and how to use it?
+## Why and how to use it
 
 In clojure.spec (spec.alpha), `s/explain-data` reports how spec conformance eventually failed, as follows:
 
