@@ -760,7 +760,8 @@
        :val str
        :in []
        :trail []}
-      {:spec `integer? :path [] :val str :in [] :trail [:ret]}]]
+      {:spec `integer? :path [] :val "0" :in [] :trail [:ret]
+       :snapshots [str "0"]}]]
 
     (s/multi-spec m :type)
     {:type :x}

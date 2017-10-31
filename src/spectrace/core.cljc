@@ -216,10 +216,20 @@
 (defmethod step `s/inst-in [state]
   (step-for-x-in state))
 
-(defmethod step `s/fspec [{:keys [path ::pred] :as state}]
-  (if (empty? path)
-    (assoc state :spec pred)
-    (step-forward state)))
+(defmethod step `s/fspec [{:keys [path val trail ::pred] :as state}]
+  (cond (empty? path)
+        (assoc state :spec pred)
+
+        (= (first path) :ret)
+        (let [fret (::val state)]
+          (assoc state
+                 :spec pred
+                 :path (rest path)
+                 :val fret
+                 :trail (conj trail :ret)
+                 :snapshots [val fret]))
+
+        :else (assert false "should not be reached")))
 
 (defn- method-of [multi-name key]
   #?(:clj (let [maybe-multi (resolve multi-name)]
@@ -269,8 +279,9 @@
            ret [state]]
       (if (= spec pred)
         (add-reason ret)
-        (if-let [state' (some-> (step (cond-> (assoc state ::pred pred)
-                                        reason (assoc :reason reason)))
+        (if-let [state' (some-> (assoc state ::pred pred ::val val)
+                                (cond-> reason (assoc :reason reason))
+                                step
                                 (normalize pred))]
           (recur (dissoc state' :snapshots) (conj ret state'))
           (add-reason ret))))))
