@@ -754,6 +754,15 @@
        :trail []}]]
 
     (s/fspec :args (s/cat :n integer?) :ret integer?)
+    42
+    [[{:spec `(s/fspec :args (s/cat :n integer?) :ret integer? :fn nil)
+       :path []
+       :val 42
+       :in []
+       :trail []}
+      {:spec 'ifn? :path [] :val 42 :in [] :trail []}]]
+
+    (s/fspec :args (s/cat :n integer?) :ret integer?)
     str
     [[{:spec `(s/fspec :args (s/cat :n integer?) :ret integer? :fn nil)
        :path [:ret]
