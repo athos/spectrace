@@ -6,7 +6,7 @@
 (s/def ::path (s/nilable (s/coll-of any?)))
 (s/def ::val any?)
 (s/def ::in (s/nilable (s/coll-of any?)))
-(s/def ::pred any?)
+(s/def ::strace/pred any?)
 (s/def ::reason string?)
 (s/def ::trail (s/coll-of any?))
 (s/def ::spec-name keyword?)
@@ -14,7 +14,8 @@
 
 (s/def ::state
   (s/keys :req-un [::spec ::path ::val ::in ::trail]
-          :opt-un [::reason ::spec-name ::snapshots]))
+          :opt-un [::reason ::spec-name ::snapshots]
+          :opt [::strace/pred]))
 
 (s/fdef strace/step
   :args (s/cat :state ::state)

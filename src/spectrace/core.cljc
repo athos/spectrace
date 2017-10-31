@@ -63,7 +63,7 @@
       ::s/pred (update state :spec second)
       ::s/nil (assoc state :spec 'nil?))))
 
-(defmethod step `s/tuple [{:keys [spec path val in pred] :as state}]
+(defmethod step `s/tuple [{:keys [spec path val in ::pred] :as state}]
   (if (empty? path)
     (do (assert (or (= pred 'vector?)
                     (s/valid? (s/cat := `#{=} :count `#{(count ~'%)}
@@ -79,7 +79,7 @@
                  :in in)
           (update :trail conj segment)))))
 
-(defn- step-for-every [{:keys [path val in pred] :as state}]
+(defn- step-for-every [{:keys [path val in ::pred] :as state}]
   (if (and (empty? path) (empty? in))
     (assoc state :spec pred)
     (let [[key & in] in]
@@ -95,7 +95,7 @@
 (defmethod step `s/coll-of [state]
   (step-for-every state))
 
-(defn- step-for-every-kv [{:keys [spec path val in pred] :as state}]
+(defn- step-for-every-kv [{:keys [spec path val in ::pred] :as state}]
   (if (and (empty? path) (empty? in))
     (assoc state :spec pred)
     (let [[segment & path] path
@@ -126,7 +126,7 @@
         (into (map (fn [k] [(keyword (name k)) k]))
               (collect-keys (set (:opt-un args)) (:req-un args))))))
 
-(defn- step-for-keys [{:keys [spec path val pred] :as state}
+(defn- step-for-keys [{:keys [spec path val ::pred] :as state}
                       & {:keys [val-fn]}]
   (let [keys (possible-keys (rest spec))]
     (if (empty? path)
@@ -167,7 +167,7 @@
 (def ^:private regex-ops
   `#{s/cat s/& s/alt s/? s/* s/+})
 
-(defn- with-regex-processing [{:keys [path reason pred] :as state} f]
+(defn- with-regex-processing [{:keys [path reason ::pred] :as state} f]
   (when-not (and (empty? path) (= reason "Extra input"))
     (let [{:keys [spec path val in] :as state'} (f state)]
       (cond (let [spec (cond-> spec (keyword? spec) s/form)]
@@ -204,7 +204,7 @@
 (defmethod step `s/+ [state]
   (with-regex-processing state step-for-rep))
 
-(defn- step-for-x-in [{:keys [pred] :as state}]
+(defn- step-for-x-in [{:keys [::pred] :as state}]
   (assoc state :spec pred))
 
 (defmethod step `s/int-in [state]
@@ -216,7 +216,7 @@
 (defmethod step `s/inst-in [state]
   (step-for-x-in state))
 
-(defmethod step `s/fspec [{:keys [path pred] :as state}]
+(defmethod step `s/fspec [{:keys [path ::pred] :as state}]
   (if (empty? path)
     (assoc state :spec pred)
     (step-forward state)))
@@ -269,7 +269,7 @@
            ret [state]]
       (if (= spec pred)
         (add-reason ret)
-        (if-let [state' (some-> (step (cond-> (assoc state :pred pred)
+        (if-let [state' (some-> (step (cond-> (assoc state ::pred pred)
                                         reason (assoc :reason reason)))
                                 (normalize pred))]
           (recur (dissoc state' :snapshots) (conj ret state'))
