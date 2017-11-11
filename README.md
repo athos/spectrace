@@ -1,6 +1,6 @@
 # spectrace 
 [![Clojars Project](https://img.shields.io/clojars/v/spectrace.svg)](https://clojars.org/spectrace)
-[![CircleCI](https://circleci.com/gh/athos/spectrace.svg?style=shield)](https://circleci.com/gh/athos/spectrace)
+[![CircleCI](https://circleci.com/gh/athos/spectrace/tree/master.svg?style=shield)](https://circleci.com/gh/athos/spectrace/tree/master)
 [![codecov](https://codecov.io/gh/athos/spectrace/branch/master/graph/badge.svg)](https://codecov.io/gh/athos/spectrace)
 
 _spectrace_ is a clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors.
