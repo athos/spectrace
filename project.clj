@@ -1,4 +1,4 @@
-(defproject spectrace "0.1.0"
+(defproject spectrace "0.1.1-SNAPSHOT"
   :description "clojure.spec (spec.alpha) library aiming to be a fundamental tool for analyzing spec errors"
   :url "https://github.com/athos/spectrace"
   :license {:name "Eclipse Public License"
