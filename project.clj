@@ -6,9 +6,9 @@
 
   :test-paths ["test/clj" "test/cljc"]
 
-  :dependencies [[org.clojure/clojure "1.9.0-RC2" :scope "provided"]
+  :dependencies [[org.clojure/clojure "1.9.0" :scope "provided"]
                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
-                 [specium "0.1.0-SNAPSHOT"]]
+                 [specium "0.1.0"]]
 
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
