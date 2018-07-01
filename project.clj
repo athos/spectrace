@@ -8,6 +8,7 @@
 
   :dependencies [[org.clojure/clojure "1.9.0" :scope "provided"]
                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
+                 [org.clojure/spec.alpha "0.2.168" :scope "provided"]
                  [specium "0.1.0"]]
 
   :cljsbuild {:builds [{:id "test"

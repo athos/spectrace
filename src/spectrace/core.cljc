@@ -270,7 +270,8 @@
       (dissoc state :spec-name))))
 
 (defn- trace [{:keys [path in val pred reason]} spec value]
-  (let [state (normalize {:spec spec :path path :val value :in in} pred)
+  (let [spec (if (fn? spec) pred spec)
+        state (normalize {:spec spec :path path :val value :in in} pred)
         add-reason (fn [states]
                      (cond-> states
                        reason
