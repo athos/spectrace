@@ -86,7 +86,6 @@ For example, [_Pinpointer_](https://github.com/athos/Pinpointer), a pretty-print
 
 The following is a list of spec.alpha issues that I'm aware are to be addressed before a final release of spectrace:
 
-- [[CLJ-2068] s/explain of evaluated predicate yields :s/unknown](https://dev.clojure.org/jira/browse/CLJ-2068)
 - [[CLJ-2143] The result of s/form for s/keys\* is different from the original form](https://dev.clojure.org/jira/browse/CLJ-2143)
 - [[CLJ-2168] clojure.spec: :pred in explain for coll-of does't use resolved symbols](https://dev.clojure.org/jira/browse/CLJ-2168)
 - [[CLJ-2176] s/tuple explain-data :pred problems](https://dev.clojure.org/jira/browse/CLJ-2176)
