@@ -65,7 +65,7 @@
 
 (defmethod step `s/tuple [{:keys [spec path val in ::pred] :as state}]
   (if (empty? path)
-    (do (assert (or (= pred 'vector?)
+    (do (assert (or (#{'vector? `vector?} pred) ;; need to accept vector? for backward compatibility
                     (s/valid? (s/cat := `#{=} :count `#{(count ~'%)}
                                      :n integer?)
                               pred)))
@@ -130,7 +130,7 @@
                       & {:keys [val-fn]}]
   (let [keys (possible-keys (rest spec))]
     (if (empty? path)
-      (if (= pred 'map?)
+      (if (#{'map? `map?} pred) ;; need to accept map? for backward compatibility
         (assoc state :spec pred)
         (let [fn? (s/cat :fn `#{fn} :args (s/tuple '#{%})
                          :body (s/and seq?
