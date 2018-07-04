@@ -97,11 +97,6 @@
        :trail []}
       {:spec `string? :path [] :val :a :in [] :trail [1]}]]
 
-    (s/tuple integer?)
-    {}
-    [[{:spec `(s/tuple integer?) :path [] :val {} :in [] :trail []}
-      {:spec 'vector? :path [] :val {} :in [] :trail []}]]
-
     (s/tuple integer? string?)
     [1 "foo" 3]
     [[{:spec `(s/tuple integer? string?)
@@ -289,11 +284,6 @@
        :in []
        :trail []}
       {:spec `(= 3 (count ~'%)) :path [] :val {:a 0 :b 1} :in [] :trail []}]]
-
-    (s/keys :req-un [::x ::y])
-    1
-    [[{:spec `(s/keys :req-un [::x ::y]) :path [] :val 1 :in [] :trail []}
-      {:spec 'map? :path [] :val 1 :in [] :trail []}]]
 
     (s/keys :req-un [::x ::y])
     {}
