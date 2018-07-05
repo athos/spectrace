@@ -3,7 +3,7 @@ machine:
 
 test:
   override:
-    - lein trampoline test-all
+    - lein test-all
   post:
     - lein cloverage --codecov --ns-exclude-regex '^spectrace.specs.*'
     - bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
